@@ -18,6 +18,8 @@ Base = declarative_base(bind=dbc.engine)
 class TrillianServer(Base):	
 	__tablename__ = 'server'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
+	
+	
 
 class Node(Base):	
 	__tablename__ = 'node'
@@ -65,6 +67,8 @@ Node.capabilities = relation(NodeCapability,
 							 secondary=NodeToCapability.__table__,
 							 backref="nodes")
 Node.trixels = relation(Trixel, backref="node")
+
+Trixel.children = relation(Trixel, backref="parent")
 
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.

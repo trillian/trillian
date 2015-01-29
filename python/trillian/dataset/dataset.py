@@ -13,4 +13,6 @@ class Dataset(metaclass=ABCMeta):
 	def populate(self, trixel=None):
 		pass
 
-
+	@property
+	def data_is_local(self):
+		return self.data_is_local	

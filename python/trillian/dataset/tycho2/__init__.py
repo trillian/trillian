@@ -1,2 +1,2 @@
 
-from tycho2 import Tycho2
+from .tycho2 import Tycho2

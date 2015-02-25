@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-from DatabaseConnection import DatabaseConnection
-from AstropyQuantitySQLAlchemyTypes import GigabyteType
+from ..database.DatabaseConnection import DatabaseConnection
+from ..database.AstropyQuantitySQLAlchemyTypes import GigabyteType
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, relation, exc, column_property, validates
-from sqlalchemy import orm
+from sqlalchemy import Column, orm
 from sqlalchemy.orm.session import Session
 
 dbc = DatabaseConnection()
@@ -32,11 +32,11 @@ class NodeType(Base):
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
 class NodeCapability(Base):	
-	__tablename__ = 'node_capability
+	__tablename__ = 'node_capability'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
 class NodeToCapability(Base):
-	__tablename__ = 'node_to_capability
+	__tablename__ = 'node_to_capability'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
 class Dataset(Base):	
@@ -70,7 +70,8 @@ Node.capabilities = relation(NodeCapability,
 							 backref="nodes")
 Node.trixels = relation(Trixel, backref="node")
 
-Trixel.children = relation(Trixel, backref="parent")
+Trixel.children = relation(Trixel)
+Trixel.parent = relation(Trixel)
 
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.
@@ -79,15 +80,15 @@ Trixel.children = relation(Trixel, backref="parent")
 from sqlalchemy.orm import configure_mappers
 try:
 	configure_mappers()
-except RuntimeError, error:
-	print """
+except RuntimeError as error:
+	print("""
 An error occurred when verifying the relations between the database tables.
 Most likely this is an error in the definition of the SQLAlchemy relations - 
 see the error message below for details.
-"""
-	print "Error type: %s" % sys.exc_info()[0]
-	print "Error value: %s" % sys.exc_info()[1]
-	print "Error trace: %s" % sys.exc_info()[2]
+""")
+	print("Error type: %s" % sys.exc_info()[0])
+	print("Error value: %s" % sys.exc_info()[1])
+	print("Error trace: %s" % sys.exc_info()[2])
 	sys.exit(1)
 	
 	

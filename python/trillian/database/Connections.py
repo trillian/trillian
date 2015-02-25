@@ -5,7 +5,7 @@
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from DatabaseConnection import DatabaseConnection
+from .DatabaseConnection import DatabaseConnection
 
 class PostgreSQLConnection(object):
 	'''

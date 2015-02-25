@@ -2,7 +2,7 @@
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
-from DatabaseConnection import DatabaseConnection
+from ..DatabaseConnection import DatabaseConnection
 
 # ---------------------------------------------------------------------
 # Fill in database connection information here.
@@ -28,7 +28,7 @@ db_config = {
 
 from os.path import expanduser
 line_no = 0
-with open(expanduser("~/.pgpass") as pgpass:
+with open(expanduser("~/.pgpass")) as pgpass:
 	line_no = line_no + 1
 	for line in pgpass:
 		# skip comments	

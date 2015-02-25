@@ -35,10 +35,6 @@ class GigabyteType(TypeDecorator):
 	
 	impl = Numeric
 	
-	def __init__(self, *arg, **kwarg):
-		TypeDecorator.__init__(self, *arg, **kwarg)
-		self.quantity = arg[0]
-	
 	def process_bind_param(self, value, dialect):
 		if isinstance(value, Quantity):
 			return value.to(u.GB).value
@@ -49,3 +45,7 @@ class GigabyteType(TypeDecorator):
 		if value is not None:
 			value = value * u.GB
 		return value
+	
+	# only needed if a deep copy is needed (local state)
+	#def copy(self):
+	#	return GigabyteType(self.impl.length)

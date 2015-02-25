@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 class Dataset(metaclass=ABCMeta):
 	

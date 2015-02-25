@@ -1,2 +1,2 @@
 
-from twomass import TwoMASS
+from .twomass import TwoMASS

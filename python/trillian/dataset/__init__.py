@@ -1,5 +1,5 @@
 
-from dataset import Dataset
+from .dataset import Dataset
 
 # datasets
-from tycho2.tycho2 import Tycho2
+from .tycho2.tycho2 import Tycho2

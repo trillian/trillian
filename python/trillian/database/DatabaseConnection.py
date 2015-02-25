@@ -2,6 +2,7 @@
 #
 
 import os
+
 import sqlalchemy
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -9,8 +10,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.event import listen
 from sqlalchemy.pool import Pool
 
-import NumpyAdaptorsSQLite
-import NumpyAdaptorsPostgreSQL
+from . import NumpyAdaptorsSQLite
+from . import NumpyAdaptorsPostgreSQL
 
 def clearSearchPathCallback(dbapi_con, connection_record):
     '''

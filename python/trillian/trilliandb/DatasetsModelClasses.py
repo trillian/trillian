@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from DatabaseConnection import DatabaseConnection
+from ..database.DatabaseConnection import DatabaseConnection
 
 import sqlalchemy
 #from sqlalchemy.ext.declarative import declarative_base

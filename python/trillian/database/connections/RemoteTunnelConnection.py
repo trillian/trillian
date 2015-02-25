@@ -2,7 +2,7 @@
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
-from DatabaseConnection import DatabaseConnection
+from ..DatabaseConnection import DatabaseConnection
 
 # ---------------------------------------------------------------------
 # Fill in database connection information here.
@@ -28,17 +28,21 @@ db_config = {
 
 from os.path import expanduser
 line_no = 0
-with open(expanduser("~/.pgpass") as pgpass:
+with open(expanduser("~/.pgpass")) as pgpass:
 	line_no = line_no + 1
 	for line in pgpass:
 		# skip comments	
-		if line.startswith("#"):
+		if line.startswith("#") or len(line.strip()) == 0:
 			continue
 		try:
-			(user, password, host, database) = line.split(":")
-			if user in [user, '*'] and database in [database, '*'] and host in [host, '*'] and port in [port, '*']:
+			(host, port, database, username, password) = line.split(":")
+			if username in [db_config["user"], '*'] and \
+			   database in [db_config["database"], '*'] and \
+			   host in [db_config["host"], '*'] and \
+			   port in [db_config["port"], '*']:
 				db_config["password"] = password
 		except ValueError:
+			print(line)
 			raise Exception("An incorrectly formatted line was found in '~/.pgpass (line {0}).".format(line_no))
 
 # If password is still empty by here, that must be what the user intended.

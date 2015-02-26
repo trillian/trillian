@@ -15,7 +15,7 @@ Base = db.Base
 
 class Object(Base):
     __tablename__ = 'object'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 	objectTypes = relationship('ObjectType', backref="objects")
 	things = relationship('Thing', backref="objects")
@@ -30,47 +30,47 @@ class Object(Base):
 
 class Field(Base):
     __tablename__ = 'field'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class ObjectTypeFlag(Base):
     __tablename__ = 'object_type_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class ObjectToObjectTypeFlag(Base):
     __tablename__ = 'object_to_type_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class Thing(Base):
     __tablename__ = 'thing'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class ThingToObject(Base):
     __tablename__ = 'object_type_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class Object1Flag(Base):
     __tablename__ = 'object1_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class Object1Flag(Base):
     __tablename__ = 'object_to_object1_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class Object2Flag(Base):
     __tablename__ = 'object2_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class ObjectToObject2Flag(Base):
     __tablename__ = 'object_to_object2_flag'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class ResolveStatus(Base):
     __tablename__ = 'resolve_status'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 class ObjectToResolveStatus(Base):
     __tablename__ = 'object_to_resolve_status'
-    __table_args__ = {'autoload': True, 'schema': 'sdssphoto'}
+    __table_args__ = {'autoload': True, 'schema': 'dataset_sdss_dr12'}
 
 #---------
 # Test that all relationships/mappings are self-consistent.
@@ -80,7 +80,7 @@ try:
 	configure_mappers()
 except RuntimeError, error:
 	print('''
-	sdssphoto.ModelClasses:
+	dataset_sdss_dr12.ModelClasses:
 	An error occurred when verifying the relationships between the database tables.  
 	Most likely this is an error in the definition of the SQLALchemy relationships-
 	see the error message below for details.

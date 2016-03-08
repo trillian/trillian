@@ -14,6 +14,12 @@ A more detailed descripton of the project can be found here: [http://trillianver
 
 An arXiv paper by Demitri Muna and Eric Huff that describes Trillian in more detail can be found here: [arXiv:1402.5932](http://arxiv.org/abs/1402.5932).
 
+Links
+-----
+Project home page: [http://trillianverse.org](http://trillianverse.org)  
+Mozilla ScienceLab Collaborate page: [http://trillianverse.org](https://mozillascience.org/collaborate)  
+Mailing list: [https://groups.google.com/forum/#!forum/trillianverse](https://groups.google.com/forum/#!forum/trillianverse)  
+
 Dependencies
 ------------
 ###### Server Software

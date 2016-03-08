@@ -11,8 +11,15 @@ Steps below link to further pages in the Trillian wiki that go into much more de
 
 ## Road Map
 
+Some of these steps depend on previous steps; others can be performed in parallel. The roadmap reflects these dependencies through milestones; each top level item within a milestone does not have prior dependencies.
+
+###### Milestone 1: Create one data set
+
  * Design a database schema for the Trillian “command and control” server. It will need to manage the users, data available, and the jobs submitted to the server.
  * Add the first data source: imaging data from the [Sloan Digital Sky Survey](http://www.sdss.org/dr12/) (SDSS). Data added will be the subset of the SDSS covering [Stripe 82](http://www.physics.drexel.edu/~gtr/vla/stripe82/Deep_VLA_Observations_of_SDSS_Stripe_82.html), but Trillian will need to know what the entire footprint of the survey is.
+ 
+ 
+ 
  * Add a second data source.
  * Add further data sources as resources allow. Sources can be assigned each to interested individuals.
  * Design the basic Trillian data access API. This includes specifying the kind of data requested (catalog, imaging, etc.), wavelength range, magnitude range, location on sky, etc.

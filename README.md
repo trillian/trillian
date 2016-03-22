@@ -17,7 +17,7 @@ An arXiv paper by Demitri Muna and Eric Huff that describes Trillian in more det
 Links
 -----
 Project home page: [http://trillianverse.org](http://trillianverse.org)  
-Mozilla ScienceLab Collaborate page: [http://trillianverse.org](https://mozillascience.org/collaborate)  
+Mozilla ScienceLab Collaborate page: [https://mozillascience.org/projects/trillian](https://mozillascience.org/projects/trillian)  
 Mailing list: [https://groups.google.com/forum/#!forum/trillianverse](https://groups.google.com/forum/#!forum/trillianverse)  
 
 Dependencies

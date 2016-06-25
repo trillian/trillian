@@ -1,0 +1,2 @@
+
+from gzopen import gzopen

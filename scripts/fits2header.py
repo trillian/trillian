@@ -47,6 +47,10 @@ parser.add_argument("-x", "--debug",
 # 					dest="mp",
 # 					action="store_true")
 
+if len(sys.argv) < 2:
+    parser.print_usage()
+    parser.exit(1)
+
 args = parser.parse_args()
 
 source_dir = args.source_directory

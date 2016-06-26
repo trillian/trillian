@@ -19,50 +19,9 @@ import queue
 import multiprocessing as mp
 #import threading
 
-from trillian.utlities import extract_FITS_header
+from trillian.utilities import extract_FITS_header
 
-parser = argparse.ArgumentParser(description="A script to extract headers from FITS files.")
-parser.add_argument("-d", "--directory",
-					help="root directory to search for FITS files",
-					dest="source_directory",
-					default=".")
-parser.add_argument("-r", "--recursive",
-					help="search source directory recursively",
-					action="store_true")
-parser.add_argument("-o", "--output",
-					help="output directory",
-					dest="output_directory",
-					default=".")
-parser.add_argument("-z", "--gzip",
-					help="include '.gz' FITS files if found",
-					dest="gzip",
-					default=True)
-parser.add_argument("-c", "--compress",
-					help="gzip output files (individually)",
-					dest="compress",
-					action="store_true")
-parser.add_argument("-x", "--debug",
-					help="debug mode: limit to n files",
-					dest="debug",
-					default=False)
-# parser.add_argument("-m", "--multiprocessing",
-# 					help="enable multiprocessing, up to n processes",
-# 					dest="mp",
-# 					action="store_true")
-
-if len(sys.argv) < 2:
-    parser.print_usage()
-    parser.exit(1)
-
-args = parser.parse_args()
-
-source_dir = args.source_directory
-#if args.output_directory is None:
-#	output_dir = "."
-#else:
-output_dir = args.output_directory
-
-def is_fits_file(filepath, allow_gz=False):
+def is_fits_file(filepath, read_compressed=False):
 	'''
 	Check if this is a FITS file. Not robust - only checks for extension.
 	'''
@@ -138,32 +97,35 @@ if __name__ == "__main__":
 						type=int,
 						default=None)
 	parser.add_argument("-p", "--processes",
-						help="use threading with n threads (0 = no of cores)",
+						help="use multiprocessing with n processes (0 = no of cores, default)",
 						dest="consumer_count",
 						type=int,
-						default=1)
-					
-	# parser.add_argument("-m", "--multiprocessing",
-	#					help="enable multiprocessing, up to n processes",
-	#					dest="mp",
-	#					action="store_true")
-
+						default=0)
+	
 	# Print help if no arguments are provided
 	if len(sys.argv) < 2:
-		parser.print_usage()
+		parser.print_help()
 		parser.exit(1)
 
 	args = parser.parse_args()
 
 	source_dir = args.source_directory
-	#if args.output_directory is None:
-	#	output_dir = "."
-	#else:
 	output_dir = args.output_directory
 
+	# get processor count
+	#
+	if args.consumer_count == 0: #  0 = number of cores available
+		n_processes = os.cpu_count()
+		if n_processes == None: # can't determine number of cores
+			n_processes = 1
+	elif args.consumer_count < 1:
+		print("An invalid number of processes was specified ({0}).".format(args.consumer_count))
+	else:
+		n_processes = args.consumer_count
+
 	queue = mp.Queue(maxsize=10)
-	n_processes = 2
-	mp.Pool(processes=n_processes, initializer=worker_main, initargs=(queue,))
+	#n_processes = args.consumer_count
+	pool = mp.Pool(processes=n_processes, initializer=worker_main, initargs=(queue,))
 	
 	file_count = 0
 	

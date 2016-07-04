@@ -1,4 +1,4 @@
-CREATE TABLE dataset_wise_allwise.allwise
+CREATE TABLE dataset_wise.allwise
 (
   designation text,
   ra numeric,

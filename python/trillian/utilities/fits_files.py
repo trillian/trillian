@@ -8,7 +8,41 @@ Created 2 May 2016
 """
 
 import os
+import bz2
+import gzip
+import pathlib # Python 3.4+
+
 import fitsio
+
+def is_fits_file(filepath, read_compressed=False, robust_check=False):
+	'''
+	Check if this is a FITS file from the extension (by default).
+	Set robust_check=True to actually read the start of the file.
+	'''
+	is_fits = False
+	allowed_suffixes = [r'\.fits$', r'\.fts$']
+	
+	if read_compressed:
+		allowed_suffixes = allowed_suffixes + [r'\.fits.gz$', r'\.fts.gz$', r'\.fits.bz2$', r'\.fts.bz2$']
+
+	is_fits = any([re.search(suffix, filepath, re.IGNORECASE) for suffix in allowed_suffixes])
+	
+	if is_fits and robust_check:
+		fits_start = "SIMPLE  =                    T" # start of every FITS file
+		
+		suffix = pathlib.Path(filepath).suffix.lower()[1:] # remove the leading '.'
+		
+		if suffix in ['fits', 'fts']: # 'suffix' returns the very last suffix
+			with open(filepath) as f:
+				is_fits = (f.read(30).decode('utf-8') == fits_start)
+			
+		elif read_compressed:
+			if suffix == 'gz':
+				is_fits = (gzip.open(filepath).read(30).decode('utf-8') == fits_start)
+			elif suffix = 'bz2':
+				is_fits = (bz2.open(filepath).read(30).decode('utf-8') == fits_start)
+		
+	return is_fits
 
 def extract_FITS_header(filepath=None, HDU=None):
 	'''

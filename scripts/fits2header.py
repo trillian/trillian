@@ -16,6 +16,7 @@ import gzip
 import fnmatch
 import argparse
 import queue
+import os.path
 import multiprocessing as mp
 #import threading
 
@@ -138,13 +139,15 @@ if __name__ == "__main__":
 			relative_directory = os.path.relpath(root, source_dir)
 		
 			for filename in files:
+				# "is FITS" check is based on filename alone
 				if is_fits_file(filepath=filename, read_compressed=args.compressed) == False:
 					continue
 			
 				#print("Adding file to queue: {0}".format(os.path.basename(filename)))
 				filepath = os.path.join(root, filename)
 				output_filepath = os.path.join(output_dir, relative_directory, filename.rstrip(".gz")+".thdr")
-				queue.put((filepath, output_filepath))
+				if os.path.isfile(output_filepath) == False:
+					queue.put((filepath, output_filepath))
 			
 				if args.limit:
 					file_count = file_count + 1
@@ -158,7 +161,8 @@ if __name__ == "__main__":
 			
 			filepath = os.path.join(source_dir, filename)
 			output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".thdr")
-			queue.put((filepath, output_filepath))
+			if os.path.isfile(output_filepath) == False:
+				queue.put((filepath, output_filepath))
 
 	for i in range(n_processes):
 		# An empty tuple signals we are done, one per worker.

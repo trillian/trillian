@@ -1,7 +1,6 @@
-CREATE TABLE twomass_psc (
-	pk serial,
+CREATE TABLE dataset_twomass.psc (
     ra numeric,
-    decl numeric,
+    dec numeric,
     err_maj numeric,
     err_min numeric,
     err_ang smallint,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-ModelClasses file for datafiledb.
+ModelClasses file for file.
 '''
 
 from ..database.DatabaseConnection import DatabaseConnection
@@ -22,27 +22,27 @@ Base = declarative_base(bind=dbc.engine)
 
 class FitsHeaderKeyword(Base):
 	__tablename__ = 'fits_header_keyword'
-	__table_args__ = {'autoload' : True, 'schema' : 'datafiledb'}
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class FitsHeaderValue(Base):
 	__tablename__ = 'fits_header_value'
-	__table_args__ = {'autoload' : True, 'schema' : 'datafiledb'}
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class FitsHDU(Base):
 	__tablename__ = 'fits_hdu'
-	__table_args__ = {'autoload' : True, 'schema' : 'datafiledb'}
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class FitsFile(Base):
 	__tablename__ = 'fits_file'
-	__table_args__ = {'autoload' : True, 'schema' : 'datafiledb'}
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class DataSource(Base):
 	__tablename__ = 'data_source'
-	__table_args__ = {'autoload' : True, 'schema' : 'datafiledb'}
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class BasePath(Base):
 	__tablename__ = 'base_path'
-	__table_args__ = {'autoload' : True, 'schema' : 'datafiledb'}
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 # =========================
 # Define relations here
@@ -52,7 +52,7 @@ DataSource.fitsFiles = relation(FitsFile, backref="dataSource")
 
 FitsFile.basePath = relation(BasePath) # no backref needed here
 
-FitsFile.hdus = relation(FitsHDU, backref="fiteFile")
+FitsFile.hdus = relation(FitsHDU, backref="fitsFile")
 FitsHDU.headerValues = relation(FitsHeaderValue, backref="fitsFile")
 FitsHeaderValue.keyword = relation(FitsHeaderKeyword, backref="headerValues")
 

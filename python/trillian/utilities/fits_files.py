@@ -39,7 +39,7 @@ def is_fits_file(filepath, read_compressed=False, robust_check=False):
 		elif read_compressed:
 			if suffix == 'gz':
 				is_fits = (gzip.open(filepath).read(30).decode('utf-8') == fits_start)
-			elif suffix = 'bz2':
+			elif suffix == 'bz2':
 				is_fits = (bz2.open(filepath).read(30).decode('utf-8') == fits_start)
 		
 	return is_fits

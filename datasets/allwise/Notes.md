@@ -18,7 +18,7 @@ This is an overview of the available WISE data products:
 * Release date: 14 March 2012
 * All-Sky source catalog, 563M objects.
 * All-Sky co-added images, 18,240 FITS files x 4 bands
-* All-Sky individual exposures, 
+* All-Sky individual exposures, 17,916,180 FITS files – 4 bands of "int", mask, & "unc" files.
 * Source databse from single exposure images, ~9.4B detections
 * Reject table, 284M low signal to noise detections or image artifacts
 * Data taken from 7 January 2010 to 6 August 2010 (full cryogenic phase)

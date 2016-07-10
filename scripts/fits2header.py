@@ -43,6 +43,9 @@ def worker_main(queue):
 			extract_header(filepath, output)
 
 def extract_header(filepath, output_filepath):
+	'''
+	Read FITS file at "filepath", extract header and write JSON file to "output_filepath".
+	'''
 	d = extract_FITS_header(filepath)
 	
 	# create directories if needed
@@ -102,6 +105,10 @@ if __name__ == "__main__":
 						dest="consumer_count",
 						type=int,
 						default=0)
+	parser.add_arguement("-f", "--file",
+						 help="use input file that contains a list of files to read",
+						 dest="input_file",
+						 default=None)
 	
 	# Print help if no arguments are provided
 	if len(sys.argv) < 2:
@@ -112,6 +119,24 @@ if __name__ == "__main__":
 
 	source_dir = args.source_directory
 	output_dir = args.output_directory
+
+# 	if args.input_file:
+# 		# Read from the files listed in given file.
+# 		# If the path starts with a "/", read it as a full path,
+# 		# otherwise assume the paths are relative to the directory specified in the "-d" argument.
+# 		
+# 		with open(args.input_file) as input_file:
+# 			for nextpath in input_file:
+# 				if nextpath[0] == '/':
+# 					filepath = nextpath
+# 					output_filepath = os.join.path(output_dir, 
+# 
+# 				else:
+# 					filepath = os.path.join(source_dir, nextpath)
+# 				
+# 				
+# 				if os.path.isfile(output_filepath) == False:
+# 					queue.put((filepath, output_filepath))
 
 	# get processor count
 	#

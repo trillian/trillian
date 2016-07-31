@@ -76,7 +76,7 @@ These source catalogs:
 
 Description of the GASC and GMSC catalogs: [https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html](https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html)
 
-
+Catalog search web interface: http://galex.stsci.edu/GR6/?page=mastform
 
 #### GALEX All-Sky Survey Source Catalog (GASC)
 
@@ -117,3 +117,10 @@ GASC : 189 chunks
 GMSC : 174 chunks
 
 There is one directory per chunk (named with the "chunk ID").
+
+
+
+## Other Links
+
+Getting started with GALEX data: http://www.galex.caltech.edu/wiki/Public:Documentation/Chapter_103
+

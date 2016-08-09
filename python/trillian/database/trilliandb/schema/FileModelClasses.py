@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 '''
-ModelClasses file for file.
+ModelClasses file for schema "trilliandb.file".
 '''
 
-from ..database.DatabaseConnection import DatabaseConnection
-from ..database.AstropyQuantitySQLAlchemyTypes import GigabyteType
-from .TrillianModelClasses import DataRelease
+from ...DatabaseConnection import DatabaseConnection
+from ...AstropyQuantitySQLAlchemyTypes import GigabyteType
+from .TrillianModelClasses import DatasetRelease
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
@@ -41,10 +41,6 @@ class FitsFile(Base):
 	__tablename__ = 'fits_file'
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
-class DataSource(Base):
-	__tablename__ = 'data_source'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
-
 class BasePath(Base):
 	__tablename__ = 'base_path'
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
@@ -53,12 +49,12 @@ class BasePath(Base):
 # Define relations here
 # =========================
 
-DataSource.fitsFiles = relation(FitsFile, backref="dataSource")
-
+FitsFile.datasetRelease = relation(DatasetRelease, backref="fitsFiles")
 FitsFile.hdus = relation(FitsHDU, backref="fitsFile")
 FitsFile.basePath = relation(BasePath) # no backref needed here
-FitsFile.dataRelease = relation(DataRelease, backref="fitsFiles")
+
 FitsHDU.headerValues = relation(FitsHeaderValue, backref="fitsFile")
+
 FitsHeaderValue.keyword = relation(FitsHeaderKeyword, backref="headerValues")
 FitsHeaderValue.comment = relation(FitsHeaderComment, backref="headerValues")
 

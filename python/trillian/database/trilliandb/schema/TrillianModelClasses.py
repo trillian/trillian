@@ -66,9 +66,9 @@ class User(Base):
 Server.nodes = relation(Node, backref="server")
 
 Node.type = relation(NodeType, backref="nodes")
-Node.datasetReleases = relation(Dataset,
-						 secondary=NodeToDatasetRelease.__table__,
-						 backref="nodes")
+Node.datasetReleases = relation(DatasetRelease,
+						 		secondary=NodeToDatasetRelease.__table__,
+						 		backref="nodes")
 Node.capabilities = relation(NodeCapability,
 							 secondary=NodeToCapability.__table__,
 							 backref="nodes")

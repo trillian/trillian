@@ -11,6 +11,7 @@ for those extensions.
 
 import os
 import re
+import sys
 import gzip
 
 import sqlalchemy
@@ -30,6 +31,8 @@ parser.add_arguement("-d", "--directory",
 parser.add_argument("-b", "--base_dir",
 					dest="base_dir",
 					help="specifies the base directory (i.e. only store path below what's given)",
+					default=None,
+					required=False)
 parser.add_argument("-s", "--source",
 					dest="source",
 					help="Trillian short name identifier for this data source",
@@ -37,7 +40,9 @@ parser.add_argument("-s", "--source",
 					required=True)
 parser.add_argument("-r", "--recursive",
 					help="search source directory recursively",
-					action="store_true")
+					action="store_true",
+					default=False,
+					required=False)
 
 args = parser.parse_args()
 
@@ -48,7 +53,7 @@ session = db.Session()
 #
 try:
 	dataRelease = session.query(DatasetRelease)\
-						 .filter(DatasetRelease.short_name==args.source)
+						 .filter(DatasetRelease.short_name==args.source)\
 						 .one()
 except sqlalchemy.orm.exc.NoResultFound:
 	raise Exception("The data release short name '{0}' was not found in the database.".format(args.source))
@@ -101,8 +106,8 @@ def getFitsHeaderComment(comment=None):
 	except sqlalchemy.orm.exc.MultipleResultsFound:
 		raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
 
-	return theComment		
-
+	return theComment
+	
 def addFileRecordToDatabase(fits_dict=None):
 	''' Takes a dictionary describing a FITS header and adds it to the dictionary. '''
 	if fits_dict is None:
@@ -187,7 +192,10 @@ def addFileRecordToDatabase(fits_dict=None):
 
 			# look for boolean value alone
 			if not line_parsed:
-				match = re.search("= \s+[TF]"
+				match = re.search("= \s+([TF]{1})")
+				if match:
+					newHeaderValue.string_value = match.group(1)
+					line_parsed = True
 
 			# look for string value + comment
 			if not line_parsed:
@@ -200,7 +208,7 @@ def addFileRecordToDatabase(fits_dict=None):
 			
 			# look for string value
 			if not line_parsed:
-				match = re.search(value_and_comment, "= '([^']|'')*')
+				match = re.search(value_and_comment, "= '([^']|'')*')")
 				if match:
 					newHeaderValue.string_value = match.group(1)
 					newHeaderValue.comment = getFitsHeaderComment(match.group(2))
@@ -224,7 +232,7 @@ if args.recursive:
 			relative_path = os.path.relpath(root, args.base_dir)
 
 			# read file containing JSON data
-			filepath = os.join.(root, filename)
+			filepath = os.join(root, filename)
 			if filename[-8:] == ".thdr.gz":
 				with gzopen(filepath) as f:
 					json_data = f.read()
@@ -239,24 +247,23 @@ if args.recursive:
 
 			addFileRecordToDatabase(fits_dict)
 				
-				
-				
 else:
 	for filename in os.listdir(args.source_directory):
 		
+		# read file containing JSON data
+		filepath = os.join(root, filename)
+		if filename[-8:] == ".thdr.gz":
+			with gzopen(filepath) as f:
+				json_data = f.read()
+		elif filename[-5] == ".thdr":
+			with open(filepath) as f:
+				json_data = f.read()
+		else:
+			continue
 
+		# convert JSON data
+		fits_dict = json.loads(json_data)
 
-
-
-
-
-
-
-
-
-
-
-
-
+		addFileRecordToDatabase(fits_dict)
 		
-		
+		sys.exit(0)

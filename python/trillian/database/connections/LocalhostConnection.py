@@ -25,7 +25,7 @@ db_config = {
 # Get the password (if unspecified above) from the user's .pgpass file.
 # Asterisks in the .pgpass file are supported, but recommend to be more
 # specific, not less.
-
+#
 from os.path import expanduser
 line_no = 0
 with open(expanduser("~/.pgpass")) as pgpass:
@@ -34,10 +34,16 @@ with open(expanduser("~/.pgpass")) as pgpass:
 		# skip comments	
 		if line.startswith("#"):
 			continue
+		elif not len(line) > 2:
+			continue
+		else:
+			line = line.rstrip("\n")
+			
 		try:
-			(user, password, host, database) = line.split(":")
+			(host, port, database, user, password) = line.split(":")
 			if user in [user, '*'] and database in [database, '*'] and host in [host, '*'] and port in [port, '*']:
 				db_config["password"] = password
+				break
 		except ValueError:
 			raise Exception("An incorrectly formatted line was found in '~/.pgpass (line {0}).".format(line_no))
 

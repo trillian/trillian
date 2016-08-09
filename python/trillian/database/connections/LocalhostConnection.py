@@ -12,7 +12,7 @@ from ..DatabaseConnection import DatabaseConnection
 db_config = {
 	'user'     : 'trillian_admin',  # specify the database username
 	'password' : '',     			# the database password for that user
-	'database' : 'trillian',		# the name of the database
+	'database' : 'trilliandb',		# the name of the database
 	'host'     : 'localhost',		# your hostname, "localhost" if on your own machine
 	'port'     : 5432				# default port is 5432
 }

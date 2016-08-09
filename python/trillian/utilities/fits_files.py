@@ -14,6 +14,8 @@ import pathlib # Python 3.4+
 
 import fitsio
 
+from trillian.utilities import hashfile
+
 def is_fits_file(filepath, read_compressed=False, robust_check=False):
 	'''
 	Check if this is a FITS file from the extension (by default).
@@ -103,6 +105,10 @@ def extract_FITS_header(filepath=None, HDU=None):
 	filepath = filepath.rstrip(".gz")
 	data["filename"] = os.path.basename(filepath)
 	data["filepath"] = os.path.dirname(filepath)
+	
+	# calculate the sha256 hash for the file
+	with open(filepath) as f:
+		data["sha256"] = hashfile(f)
 	
 	return data
 	

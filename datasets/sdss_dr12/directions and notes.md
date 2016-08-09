@@ -1,10 +1,17 @@
-## SDSS DR12
+## SDSS Data
 
 These are the notes and directions for populating the SDSS imaging data. This is comprised of a catalog and imaging. Here I have designed a new schema that improves upon that found in CAS.
 
 ### PhotoObj Catalog
 
-##### File Organization
+#### File Organization
+
+###### DR13
+
+The root location of the DR13 flat files is here:
+<https://data.sdss.org/sas/dr13/>
+
+###### DR12
 
 The root location of the DR12 data release is here:
 <http://data.sdss3.org/sas/dr12/boss/photoObj/301/>
@@ -20,7 +27,7 @@ There are three scripts to populate the database. The execution order is very im
  1. `photoRun2db.py`
  2. `photoField2db.py`
  3. `photoObj2db.py`
- 
+
 ### Imaging Data
 
 The root location of the imaging data is here:

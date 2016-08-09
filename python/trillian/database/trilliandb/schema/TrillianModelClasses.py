@@ -16,22 +16,22 @@ dbc = DatabaseConnection()
 # ========================
 Base = declarative_base(bind=dbc.engine)
 
-class Server(Base):	
+class Server(Base):
 	__tablename__ = 'server'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class Node(Base):	
+class Node(Base):
 	__tablename__ = 'node'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 	
 	# custom types
 	available_space = Column(name='available_space', type_=GigabyteType)
 	
-class NodeType(Base):	
+class NodeType(Base):
 	__tablename__ = 'node_type'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class NodeCapability(Base):	
+class NodeCapability(Base):
 	__tablename__ = 'node_capability'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
@@ -39,19 +39,23 @@ class NodeToCapability(Base):
 	__tablename__ = 'node_to_capability'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class Dataset(Base):	
+class Dataset(Base):
 	__tablename__ = 'dataset'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class NodeToDataset(Base):	
-	__tablename__ = 'node_to_dataset'
+class DatasetRelease(Base):
+	__tablename__ = 'dataset_release'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class Trixel(Base):	
+class NodeToDatasetRelease(Base):
+	__tablename__ = 'node_to_dataset_release'
+	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
+
+class Trixel(Base):
 	__tablename__ = 'trixel'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class User(Base):	
+class User(Base):
 	__tablename__ = 'user'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
@@ -90,8 +94,8 @@ see the error message below for details.
 	print("Error value: %s" % sys.exc_info()[1])
 	print("Error trace: %s" % sys.exc_info()[2])
 	sys.exit(1)
-	
-	
+
+
 
 
 

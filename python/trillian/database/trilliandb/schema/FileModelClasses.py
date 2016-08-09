@@ -6,6 +6,7 @@ ModelClasses file for file.
 
 from ..database.DatabaseConnection import DatabaseConnection
 from ..database.AstropyQuantitySQLAlchemyTypes import GigabyteType
+from .TrillianModelClasses import DataRelease
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
@@ -26,6 +27,10 @@ class FitsHeaderKeyword(Base):
 
 class FitsHeaderValue(Base):
 	__tablename__ = 'fits_header_value'
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+
+class FitsHeaderComment(Base):
+	__tablename__ = 'fits_header_comment;
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class FitsHDU(Base):
@@ -50,11 +55,12 @@ class BasePath(Base):
 
 DataSource.fitsFiles = relation(FitsFile, backref="dataSource")
 
-FitsFile.basePath = relation(BasePath) # no backref needed here
-
 FitsFile.hdus = relation(FitsHDU, backref="fitsFile")
+FitsFile.basePath = relation(BasePath) # no backref needed here
+FitsFile.dataRelease = relation(DataRelease, backref="fitsFiles")
 FitsHDU.headerValues = relation(FitsHeaderValue, backref="fitsFile")
 FitsHeaderValue.keyword = relation(FitsHeaderKeyword, backref="headerValues")
+FitsHeaderValue.comment = relation(FitsHeaderComment, backref="headerValues")
 
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.

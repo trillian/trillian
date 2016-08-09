@@ -30,7 +30,7 @@ class FitsHeaderValue(Base):
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class FitsHeaderComment(Base):
-	__tablename__ = 'fits_header_comment;
+	__tablename__ = 'fits_header_comment'
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 class FitsHDU(Base):

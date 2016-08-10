@@ -21,7 +21,7 @@ class gzopen(object):
 	Use the same way you would use 'open()'.
 	"""
 	def __init__(self, fname):
-		f = open(fname)
+		f = open(fname, mode='rb')
 		# Read magic number (the first 2 bytes) and rewind.
 		magic_number = f.read(2)
 		f.seek(0)

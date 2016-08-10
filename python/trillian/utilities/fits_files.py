@@ -14,7 +14,7 @@ import pathlib # Python 3.4+
 
 import fitsio
 
-from trillian.utilities import hashfile
+from .files import hashfile
 
 def is_fits_file(filepath, read_compressed=False, robust_check=False):
 	'''

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-ModelClasses file for schema "trilliandb.file".
+ModelClasses file for schema "file".
 '''
 
 from ..DatabaseConnection import DatabaseConnection
@@ -10,8 +10,8 @@ from .TrillianModelClasses import DatasetRelease
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import mapper, relation, exc, column_property, validates
-from sqlalchemy import Column, orm
+from sqlalchemy.orm import mapper, relationship, exc, column_property, validates
+from sqlalchemy import Column, Integer, ForeignKey, orm
 from sqlalchemy.orm.session import Session
 
 dbc = DatabaseConnection()
@@ -24,6 +24,9 @@ Base = declarative_base(bind=dbc.engine)
 class FitsHeaderKeyword(Base):
 	__tablename__ = 'fits_header_keyword'
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	
+	def __repr__(self):
+		return "<{0}.{1} object at {2}: '{3}'>".format(self.__module__, type(self).__name__, hex(id(self)), self.label)
 
 class FitsHeaderValue(Base):
 	__tablename__ = 'fits_header_value'
@@ -40,23 +43,39 @@ class FitsHDU(Base):
 class FitsFile(Base):
 	__tablename__ = 'fits_file'
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+#	dataset_release_pk = Column(Integer, ForeignKey('trillian.dataset_release.pk'))
 
 class BasePath(Base):
 	__tablename__ = 'base_path'
+	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+
+class FileKind(Base):
+	__tablename__ = "file_kind"
 	__table_args__ = {'autoload' : True, 'schema' : 'file'}
 
 # =========================
 # Define relations here
 # =========================
 
-FitsFile.datasetRelease = relation(DatasetRelease, backref="fitsFiles")
-FitsFile.hdus = relation(FitsHDU, backref="fitsFile")
-FitsFile.basePath = relation(BasePath) # no backref needed here
+#print(FitsFile.__table__.foreign_key_constraints)
 
-FitsHDU.headerValues = relation(FitsHeaderValue, backref="fitsFile")
+#DatasetRelease.fitsFiles = relationship(FitsFile,
+#										primaryjoin=FitsFile.dataset_release_pk==DatasetRelease.pk,
+#										backref="datasetRelease")
 
-FitsHeaderValue.keyword = relation(FitsHeaderKeyword, backref="headerValues")
-FitsHeaderValue.comment = relation(FitsHeaderComment, backref="headerValues")
+#FitsFile.dataRelease = relationship(DatasetRelease,
+#								  primaryjoin=FitsFile.dataset_release_pk==DatasetRelease.pk,
+#								  backref="fitsFiles")
+
+#FitsFile.datasetRelease = relationship(DatasetRelease, backref="fitsFiles")
+#FitsFile.hdus = relationship(FitsHDU, backref="fitsFile")
+#FitsFile.basePath = relationship(BasePath) # no backref needed here
+#FitsFile.fileKind = relationship(FileKind, backref="fitsFiles")
+
+FitsHDU.headerValues = relationship(FitsHeaderValue, backref="hdu")
+
+FitsHeaderValue.keyword = relationship(FitsHeaderKeyword, backref="headerValues")
+FitsHeaderValue.comment = relationship(FitsHeaderComment, backref="headerValues")
 
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.

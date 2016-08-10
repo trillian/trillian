@@ -12,24 +12,26 @@ for those extensions.
 import os
 import re
 import sys
+import json
 import gzip
+import argparse
 
 import sqlalchemy
 
 from trillian.database.connections import LocalhostConnection as db
-from trillian.database.trilliandb.schema.TrillianModelClasses import DatasetRelease
-from trillian.database.trilliandb.schema.FileModelClasses import *
-from trillian.utilities import gzopen
+from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
+from trillian.database.trilliandb.FileModelClasses import *
+#from trillian.utilities import gzopen
 from trillian.utilities import memoize
 
 parser = argparse.ArgumentParser(description="A script to import FITS JSON header files into the Trillian database.")
-parser.add_arguement("-d", "--directory",
+parser.add_argument("-d", "--directory",
 					 help="root directory to search for FITS files",
 					 dest="source_directory",
 					 default=".",
 					 required=True)
-parser.add_argument("-b", "--base_dir",
-					dest="base_dir",
+parser.add_argument("-b", "--base_path",
+					dest="base_path",
 					help="specifies the base directory (i.e. only store path below what's given)",
 					default=None,
 					required=False)
@@ -43,6 +45,11 @@ parser.add_argument("-r", "--recursive",
 					action="store_true",
 					default=False,
 					required=False)
+
+# Print help if no arguments are provided
+if len(sys.argv) < 2:
+	parser.print_help()
+	parser.exit(1)
 
 args = parser.parse_args()
 
@@ -79,7 +86,9 @@ def getFitsHeaderKeywordObject(keyword=None):
 	if keyword is None:
 		raise Exception("keyword not specified!")
 	try:
-		theKeyword = session.query(FitsHeaderKeyword.label==keyword).one()
+		theKeyword = session.query(FitsHeaderKeyword)\
+							.filter(FitsHeaderKeyword.label==keyword)\
+							.one()
 	except sqlalchemy.orm.exc.NoResultFound:
 		# create it here
 		theKeyword = FitsHeaderKeyword()
@@ -87,7 +96,6 @@ def getFitsHeaderKeywordObject(keyword=None):
 		session.add(theKeyword)
 	except sqlalchemy.orm.exc.MultipleResultsFound:
 		raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
-
 	return theKeyword
 
 @memoize
@@ -97,11 +105,13 @@ def getFitsHeaderComment(comment=None):
 		raise Exception("comment not specified!")
 	
 	try:
-		theComment = session.query(FitsHeaderComment.string==comment).one()
+		theComment = session.query(FitsHeaderComment)\
+							.filter(FitsHeaderComment.comment_string==comment)\
+							.one()
 	except sqlalchemy.orm.exc.NoResultFound:
 		# create it here
 		theComment = FitsHeaderComment()
-		theComment.string = comment
+		theComment.comment_string = comment
 		session.add(theComment)
 	except sqlalchemy.orm.exc.MultipleResultsFound:
 		raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
@@ -128,7 +138,7 @@ def addFileRecordToDatabase(fits_dict=None):
 	newFile.dataSourceRelease = dataRelease
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
-	newFile.relative_path = os.path.relpath(path=fits_dict["filepath"], start=args.base_dir)
+	newFile.relative_path = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
 	if 'sha256' in fits_dict:
 		newFile.sha256_hash = fits_dict['sha256']
 	
@@ -141,7 +151,7 @@ def addFileRecordToDatabase(fits_dict=None):
 		#
 		newHDU = FitsHDU()
 		session.add(newHDU)
-		newHDU.number = hdu_dict["number"]
+		newHDU.number = hdu_dict["hdu"]
 		newHDU.header_start_offset = hdu_dict["header_start"]
 		newHDU.data_start_offset = hdu_dict["data_start"]
 		newHDU.data_end_offset = hdu_dict["data_end"]
@@ -154,9 +164,9 @@ def addFileRecordToDatabase(fits_dict=None):
 			
 			# parse line
 			keyword = header_line[0:8].rstrip() # remove trailing whitespace
-			value_and_comment = line[8:].rstrip() # shorter strings will result in ''
+			value_and_comment = header_line[8:].rstrip() # shorter strings will result in ''
 			
-			newHeaderValue.keyword = getFitsHeaderKeywordObject(keyword=keyword)
+			newHeaderValue.keyword = getFitsHeaderKeywordObject(keyword)
 
 			line_parsed = False
 			
@@ -164,60 +174,74 @@ def addFileRecordToDatabase(fits_dict=None):
 			
 			if keyword in ["COMMENT", "HISTORY"]:
 				newHeaderValue.string_value = value_and_comment.strip()
-				newHeaderValue.comment = getFitsHeaderComment(keyword)
+				newHeaderValue.comment_string = getFitsHeaderComment(keyword)
 				line_parsed = True
 				
-			
-			# look for int or float + comment
-			match = re.search(value_and_comment, "([\-0-9.]+).+/(.+)")
-			if match:
-				newHeaderValue.string_value = match.group(1)
-				newHeaderValue.numeric_value = float(match.group(1))
-				newHeaderValue.comment = getFitsHeaderComment(match.group(2))
-				line_parsed = True
-				
-			# look for int or float alone
-			if not line_parsed:
-				match = re.search(value_and_comment, "([\-0-9.]+).+$")
-				if match:
-					newHeaderValue.string_value = match.group(1)
-					newHeaderValue.numeric_value = float(match.group(1))
-					line_parsed = True
-			
-			# look for boolean field + comment
-			if not line_parsed:
-				match = re.search("= \s+([TF]{1})\s*/\s*(.+)")
-				newHeaderValue.string_value = match.group(1)
-				line_parsed = True
-
-			# look for boolean value alone
-			if not line_parsed:
-				match = re.search("= \s+([TF]{1})")
-				if match:
-					newHeaderValue.string_value = match.group(1)
-					line_parsed = True
-
 			# look for string value + comment
 			if not line_parsed:
-				match = re.search(value_and_comment, "= ('([^']|'')*')\s*/\s*(.+)")
+				match = re.search("= ('([^']|'')*')\s*\/\s*(.*)", value_and_comment)
 				if match:
 					newHeaderValue.string_value = match.group(1)
 					# match group 2 is the characters being excluded
-					newHeaderValue.comment = getFitsHeaderComment(match.group(3))
+					comment = match.group(3).strip()
+					if len(comment):
+						newHeaderValue.comment_string = getFitsHeaderComment(comment)
 					line_parsed = True
 			
 			# look for string value
 			if not line_parsed:
-				match = re.search(value_and_comment, "= '([^']|'')*')")
+				match = re.search("= ('([^']|'')*')", value_and_comment)
 				if match:
 					newHeaderValue.string_value = match.group(1)
-					newHeaderValue.comment = getFitsHeaderComment(match.group(2))
+					comment = match.group(2).strip()
+					if len(comment) > 0:
+						newHeaderValue.comment_string = getFitsHeaderComment(comment)
+					line_parsed = True
+
+			# look for int or float + comment
+			match = re.search("=\s*([\-0-9.]+).*\/(.*)", value_and_comment)
+			if match:
+				newHeaderValue.string_value = match.group(1)
+				newHeaderValue.numeric_value = float(match.group(1))
+				comment = match.group(2).strip()
+				if len(comment) > 0:
+					newHeaderValue.comment_string = getFitsHeaderComment(comment)
+				line_parsed = True
+				
+			# look for int or float alone
+			if not line_parsed:
+				match = re.search("([\-0-9.]+)$", value_and_comment)
+				if match:
+					newHeaderValue.string_value = match.group(1)
+					try:
+						newHeaderValue.numeric_value = float(match.group(1))
+					except ValueError:
+						print("Could not convert value: '{0}'".format(value_and_comment))
+						raise Exception("ValueError: Could not convert '{0}' to a number.".format(match.group(1)))
+					line_parsed = True
+			
+			# look for boolean field + comment
+			if not line_parsed:
+				match = re.search("= \s+([TF]{1})\s*\/\s*(.*)", value_and_comment)
+				if match:
+					newHeaderValue.string_value = match.group(1)
+					comment = match.group(2).strip()
+					if len(comment) > 0:
+						newHeaderValue.comment_string = getFitsHeaderComment(comment)
+					line_parsed = True
+
+			# look for boolean value alone
+			if not line_parsed:
+				match = re.search("= \s+([TF]{1})", value_and_comment)
+				if match:
+					newHeaderValue.string_value = match.group(1)
 					line_parsed = True
 			
 			if not line_parsed:
+				print("'{0}'".format(value_and_comment))
 				raise Exception("Could not parse the header line: " + "\n\n" + header_line + "\n\n")
 			
-			newHDU.fitsHeaderValues.append(newHeaderValue)
+			newHDU.headerValues.append(newHeaderValue)
 
 if args.recursive:
 
@@ -229,15 +253,15 @@ if args.recursive:
 		for filename in files:
 			
 			# get path from the base path
-			relative_path = os.path.relpath(root, args.base_dir)
+			relative_path = os.path.relpath(root, args.base_path)
 
 			# read file containing JSON data
-			filepath = os.join(root, filename)
+			filepath = os.path.join(root, filename)
 			if filename[-8:] == ".thdr.gz":
-				with gzopen(filepath) as f:
+				with gzip.open(filepath, mode="rt") as f:
 					json_data = f.read()
 			elif filename[-5] == ".thdr":
-				with open(filepath) as f:
+				with open(filepath, encoding="utf-8") as f:
 					json_data = f.read()
 			else:
 				continue
@@ -248,15 +272,15 @@ if args.recursive:
 			addFileRecordToDatabase(fits_dict)
 				
 else:
-	for filename in os.listdir(args.source_directory):
+	for filepath in os.listdir(args.source_directory):
 		
 		# read file containing JSON data
-		filepath = os.join(root, filename)
-		if filename[-8:] == ".thdr.gz":
-			with gzopen(filepath) as f:
+		# filepath = os.path.join(root, filename)
+		if filepath[-8:] == ".thdr.gz":
+			with gzip.open(filepath, mode="rt") as f: # explicitly open in text mode (default is "rb")
 				json_data = f.read()
-		elif filename[-5] == ".thdr":
-			with open(filepath) as f:
+		elif filepath[-5] == ".thdr":
+			with open(filepath, encoding='utf-8') as f:
 				json_data = f.read()
 		else:
 			continue

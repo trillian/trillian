@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from ...DatabaseConnection import DatabaseConnection
-from ...AstropyQuantitySQLAlchemyTypes import GigabyteType
+from ..DatabaseConnection import DatabaseConnection
+from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base

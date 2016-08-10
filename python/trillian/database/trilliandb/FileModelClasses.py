@@ -4,8 +4,8 @@
 ModelClasses file for schema "trilliandb.file".
 '''
 
-from ...DatabaseConnection import DatabaseConnection
-from ...AstropyQuantitySQLAlchemyTypes import GigabyteType
+from ..DatabaseConnection import DatabaseConnection
+from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
 from .TrillianModelClasses import DatasetRelease
 
 import sqlalchemy

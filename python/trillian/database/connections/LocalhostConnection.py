@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: UTF-8 -*-
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session

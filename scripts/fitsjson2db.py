@@ -19,11 +19,18 @@ import argparse
 import sqlalchemy
 
 from trillian.database.connections import LocalhostConnection as db
-from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
+
+print(db.db)
+print(db.metadata)
+#raise Exception()
+
+#from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
 from trillian.database.trilliandb.FileModelClasses import *
 #from trillian.utilities import gzopen
 from trillian.utilities import memoize
 
+print("2")
+#print(db.metadata.keys())
 parser = argparse.ArgumentParser(description="A script to import FITS JSON header files into the Trillian database.")
 parser.add_argument("-d", "--directory",
 					 help="root directory to search for FITS files",
@@ -56,8 +63,9 @@ args = parser.parse_args()
 # Set up session
 session = db.Session()
 
+# -------------------------------------------------------------------
 # Set up data release - this script expects only one while being run.
-#
+# -------------------------------------------------------------------
 try:
 	dataRelease = session.query(DatasetRelease)\
 						 .filter(DatasetRelease.short_name==args.source)\
@@ -68,6 +76,13 @@ except sqlalchemy.orm.exc.MultipleResultsFound:
 	# missing constraint in the database
 	raise Exception("More than one data release was found for '{0}' (shouldn't happen).".format(args.source))
 
+# ---------------------------------------------------
+# Look up base path if provided - must be set by hand
+# ---------------------------------------------------
+#
+# remove any trailing "/" to standardize on base paths
+if args.base_path and args.base_path[-1:] == "/":
+	args.base_path = args.base_path[0:-1]
 try:
 	basePath = session.query(BasePath)\
 					  .filter(BasePath.path==args.base_path)\
@@ -135,7 +150,7 @@ def addFileRecordToDatabase(fits_dict=None):
 	# create database object
 	newFile = FitsFile()
 	session.add(newFile)
-	newFile.dataSourceRelease = dataRelease
+	newFile.datasetRelease = dataRelease
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
 	newFile.relative_path = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
@@ -151,7 +166,7 @@ def addFileRecordToDatabase(fits_dict=None):
 		#
 		newHDU = FitsHDU()
 		session.add(newHDU)
-		newHDU.number = hdu_dict["hdu"]
+		newHDU.number = int(hdu_dict["hdu"])
 		newHDU.header_start_offset = hdu_dict["header_start"]
 		newHDU.data_start_offset = hdu_dict["data_start"]
 		newHDU.data_end_offset = hdu_dict["data_end"]
@@ -161,6 +176,7 @@ def addFileRecordToDatabase(fits_dict=None):
 			newHeaderValue = FitsHeaderValue()
 			session.add(newHeaderValue)
 			newHeaderValue.index = index
+			newHeaderValue.hdu = newHDU
 			
 			# parse line
 			keyword = header_line[0:8].rstrip() # remove trailing whitespace
@@ -241,7 +257,8 @@ def addFileRecordToDatabase(fits_dict=None):
 				print("'{0}'".format(value_and_comment))
 				raise Exception("Could not parse the header line: " + "\n\n" + header_line + "\n\n")
 			
-			newHDU.headerValues.append(newHeaderValue)
+
+session.begin()
 
 if args.recursive:
 
@@ -291,3 +308,7 @@ else:
 		addFileRecordToDatabase(fits_dict)
 		
 		sys.exit(0)
+
+session.rollback()
+db.engine.dispose()
+sys.exit(0)

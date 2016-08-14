@@ -19,58 +19,50 @@ dbc = DatabaseConnection()
 # ========================
 # Define database classes
 # ========================
-Base = declarative_base(bind=dbc.engine)
+#
+Base = dbc.Base
 
 class FitsHeaderKeyword(Base):
 	__tablename__ = 'fits_header_keyword'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 	
 	def __repr__(self):
 		return "<{0}.{1} object at {2}: '{3}'>".format(self.__module__, type(self).__name__, hex(id(self)), self.label)
 
 class FitsHeaderValue(Base):
 	__tablename__ = 'fits_header_value'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 class FitsHeaderComment(Base):
 	__tablename__ = 'fits_header_comment'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 class FitsHDU(Base):
 	__tablename__ = 'fits_hdu'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 class FitsFile(Base):
 	__tablename__ = 'fits_file'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 #	dataset_release_pk = Column(Integer, ForeignKey('trillian.dataset_release.pk'))
 
 class BasePath(Base):
 	__tablename__ = 'base_path'
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 class FileKind(Base):
 	__tablename__ = "file_kind"
-	__table_args__ = {'autoload' : True, 'schema' : 'file'}
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 # =========================
-# Define relations here
+# Define relationships here
 # =========================
+#
+FitsFile.datasetRelease = relationship(DatasetRelease, backref="fitsFiles")
 
-#print(FitsFile.__table__.foreign_key_constraints)
-
-#DatasetRelease.fitsFiles = relationship(FitsFile,
-#										primaryjoin=FitsFile.dataset_release_pk==DatasetRelease.pk,
-#										backref="datasetRelease")
-
-#FitsFile.dataRelease = relationship(DatasetRelease,
-#								  primaryjoin=FitsFile.dataset_release_pk==DatasetRelease.pk,
-#								  backref="fitsFiles")
-
-#FitsFile.datasetRelease = relationship(DatasetRelease, backref="fitsFiles")
-#FitsFile.hdus = relationship(FitsHDU, backref="fitsFile")
-#FitsFile.basePath = relationship(BasePath) # no backref needed here
-#FitsFile.fileKind = relationship(FileKind, backref="fitsFiles")
+FitsFile.hdus = relationship(FitsHDU, backref="fitsFile")
+FitsFile.basePath = relationship(BasePath) # no backref needed here
+FitsFile.fileKind = relationship(FileKind, backref="fitsFiles")
 
 FitsHDU.headerValues = relationship(FitsHeaderValue, backref="hdu")
 
@@ -80,10 +72,11 @@ FitsHeaderValue.comment = relationship(FitsHeaderComment, backref="headerValues"
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.
 # ---------------------------------------------------------
-
+#
 from sqlalchemy.orm import configure_mappers
 try:
 	configure_mappers()
+#	raise Exception("")
 except RuntimeError as error:
 	print("""
 An error occurred when verifying the relations between the database tables.

@@ -5,7 +5,7 @@ from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
 
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import mapper, relation, exc, column_property, validates
+from sqlalchemy.orm import mapper, relationship, exc, column_property, validates
 from sqlalchemy import Column, orm
 from sqlalchemy.orm.session import Session
 
@@ -14,10 +14,11 @@ dbc = DatabaseConnection()
 # ========================
 # Define database classes
 # ========================
-Base = declarative_base(bind=dbc.engine)
+#
+Base = dbc.Base
 
 class Server(Base):
-	__tablename__ = 'server'
+	__tablename__ = 'trillian_server'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
 class Node(Base):
@@ -55,32 +56,32 @@ class Trixel(Base):
 	__tablename__ = 'trixel'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
-class User(Base):
-	__tablename__ = 'user'
-	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
+#class TrillianUser(Base):
+#	__tablename__ = 'trillian_user'
+#	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
 # =========================
-# Define relations here
+# Define relationships here
 # =========================
+#
+Server.nodes = relationship(Node, backref="server")
 
-Server.nodes = relation(Node, backref="server")
-
-Node.nodeType = relation(NodeType, backref="nodes")
-Node.datasetReleases = relation(DatasetRelease,
+Node.nodeType = relationship(NodeType, backref="nodes")
+Node.datasetReleases = relationship(DatasetRelease,
 						 		secondary=NodeToDatasetRelease.__table__,
 						 		backref="nodes")
-Node.capabilities = relation(NodeCapability,
+Node.capabilities = relationship(NodeCapability,
 							 secondary=NodeToCapability.__table__,
 							 backref="nodes")
-Node.trixels = relation(Trixel, backref="node")
+Node.trixels = relationship(Trixel, backref="node")
 
-Trixel.children = relation(Trixel)
-Trixel.parent = relation(Trixel)
+Trixel.children = relationship(Trixel)
+Trixel.parent = relationship(Trixel)
 
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.
 # ---------------------------------------------------------
-
+#
 from sqlalchemy.orm import configure_mappers
 try:
 	configure_mappers()
@@ -94,8 +95,5 @@ see the error message below for details.
 	print("Error value: %s" % sys.exc_info()[1])
 	print("Error trace: %s" % sys.exc_info()[2])
 	sys.exit(1)
-
-
-
 
 

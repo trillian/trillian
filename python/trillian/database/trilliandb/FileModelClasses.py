@@ -14,6 +14,8 @@ from sqlalchemy.orm import mapper, relationship, exc, column_property, validates
 from sqlalchemy import Column, Integer, ForeignKey, orm
 from sqlalchemy.orm.session import Session
 
+from ..utilities import memoize
+
 dbc = DatabaseConnection()
 
 # ========================
@@ -36,6 +38,37 @@ class FitsHeaderValue(Base):
 class FitsHeaderComment(Base):
 	__tablename__ = 'fits_header_comment'
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
+	
+	@memoize
+	def objectFromString(session=None, commentString=None, add=True):
+		'''
+		Get the FITS header commend objects from the 'fits_header_comment' table.
+		
+		@param commentString The string value of the comment.
+		@param add Boolean to indicate if a new entry should be added to the database if not found.
+		@returns A FitsHeaderComment object that matches `commentString`, None otherwise.
+		'''
+		if comment is None:
+			raise Exception("comment not specified!")
+		if session is None:
+			raise Exception("A session must be provided.")
+	
+		try:
+			theComment = session.query(FitsHeaderComment)\
+								.filter(FitsHeaderComment.comment_string==commentString)\
+								.one()
+		except sqlalchemy.orm.exc.NoResultFound:
+			if add:
+				# create it here
+				theComment = FitsHeaderComment()
+				theComment.comment_string = commentString
+				session.add(theComment)
+			else:
+				theComment = None
+		except sqlalchemy.orm.exc.MultipleResultsFound:
+			raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
+
+		return theComment
 
 class FitsHDU(Base):
 	__tablename__ = 'fits_hdu'
@@ -61,7 +94,7 @@ class FileKind(Base):
 FitsFile.datasetRelease = relationship(DatasetRelease, backref="fitsFiles")
 
 FitsFile.hdus = relationship(FitsHDU, backref="fitsFile")
-FitsFile.basePath = relationship(BasePath) # no backref needed here
+FitsFile.basePath = relationship(BasePath, backref="fitsFiles")
 FitsFile.fileKind = relationship(FileKind, backref="fitsFiles")
 
 FitsHDU.headerValues = relationship(FitsHeaderValue, backref="hdu")

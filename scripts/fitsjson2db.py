@@ -14,30 +14,24 @@ import re
 import sys
 import json
 import gzip
+import os.path
 import argparse
 
 import sqlalchemy
 
 from trillian.database.connections import LocalhostConnection as db
-
-print(db.db)
-print(db.metadata)
-#raise Exception()
-
-#from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
+from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
 from trillian.database.trilliandb.FileModelClasses import *
 #from trillian.utilities import gzopen
 from trillian.utilities import memoize
 
-print("2")
-#print(db.metadata.keys())
 parser = argparse.ArgumentParser(description="A script to import FITS JSON header files into the Trillian database.")
 parser.add_argument("-d", "--directory",
 					 help="root directory to search for FITS files",
 					 dest="source_directory",
 					 default=".",
 					 required=True)
-parser.add_argument("-b", "--base_path",
+parser.add_argument("-b", "--base-path",
 					dest="base_path",
 					help="specifies the base directory (i.e. only store path below what's given)",
 					default=None,
@@ -67,7 +61,7 @@ session = db.Session()
 # Set up data release - this script expects only one while being run.
 # -------------------------------------------------------------------
 try:
-	dataRelease = session.query(DatasetRelease)\
+	datasetRelease = session.query(DatasetRelease)\
 						 .filter(DatasetRelease.short_name==args.source)\
 						 .one()
 except sqlalchemy.orm.exc.NoResultFound:
@@ -111,6 +105,8 @@ def getFitsHeaderKeywordObject(keyword=None):
 		session.add(theKeyword)
 	except sqlalchemy.orm.exc.MultipleResultsFound:
 		raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
+		
+	assert theKeyword is not None, "'keyword' should not be 'None'"
 	return theKeyword
 
 @memoize
@@ -150,7 +146,8 @@ def addFileRecordToDatabase(fits_dict=None):
 	# create database object
 	newFile = FitsFile()
 	session.add(newFile)
-	newFile.datasetRelease = dataRelease
+	newFile.basePath = basePath
+	newFile.datasetRelease = datasetRelease
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
 	newFile.relative_path = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
@@ -173,16 +170,19 @@ def addFileRecordToDatabase(fits_dict=None):
 		newHDU.fitsFile = newFile
 
 		for index, header_line in enumerate(hdu_dict["header"]):
-			newHeaderValue = FitsHeaderValue()
-			session.add(newHeaderValue)
-			newHeaderValue.index = index
-			newHeaderValue.hdu = newHDU
 			
 			# parse line
 			keyword = header_line[0:8].rstrip() # remove trailing whitespace
 			value_and_comment = header_line[8:].rstrip() # shorter strings will result in ''
+
+			keywordObject = getFitsHeaderKeywordObject(keyword)
 			
-			newHeaderValue.keyword = getFitsHeaderKeywordObject(keyword)
+			newHeaderValue = FitsHeaderValue()
+			session.add(newHeaderValue)
+			newHeaderValue.index = index
+			newHeaderValue.hdu = newHDU
+						
+			newHeaderValue.keyword = keywordObject
 
 			line_parsed = False
 			
@@ -286,8 +286,18 @@ if args.recursive:
 			# convert JSON data
 			fits_dict = json.loads(json_data)
 
-			addFileRecordToDatabase(fits_dict)
-				
+			# check if we have this file already
+			try:
+				f = session.query(FitsFile)\
+						   .join(DatasetRelease)\
+						   .filter(FitsFile.filename==fits_dict["filename"])\
+						   .filter(FitsFile.datasetRelease==datasetRelease)\
+						   .one()
+			except sqlalchemy.orm.exc.NoResultFound:
+				addFileRecordToDatabase(fits_dict)
+		
+		session.commit() # commit for each directory
+		session.begin()
 else:
 	for filepath in os.listdir(args.source_directory):
 		
@@ -305,10 +315,20 @@ else:
 		# convert JSON data
 		fits_dict = json.loads(json_data)
 
-		addFileRecordToDatabase(fits_dict)
-		
-		sys.exit(0)
+		# check if we have this file already
+		try:
+			f = session.query(FitsFile)\
+					   .join(DatasetRelease)\
+					   .filter(FitsFile.filename==fits_dict["filename"])\
+					   .filter(FitsFile.datasetRelease==datasetRelease)\
+					   .one()
+			continue # if found
+		except sqlalchemy.orm.exc.NoResultFound:
+			addFileRecordToDatabase(fits_dict)
+			session.commit() # commit for each file
+			session.begin()
 
-session.rollback()
+		
+#session.commit()
 db.engine.dispose()
 sys.exit(0)

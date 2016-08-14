@@ -72,11 +72,10 @@ class DatabaseConnection(object):
 			me.database_connection_string = database_connection_string
 			
 			# change 'echo' to print each SQL query (for debugging/optimizing/the curious)
-			me.engine = create_engine(me.database_connection_string, echo=True)	
+			me.engine = create_engine(me.database_connection_string, echo=False)	
 
 			me.metadata = MetaData()
 			me.metadata.bind = me.engine
-			me.metadata.reflect()
 			me.Base = declarative_base(bind=me.engine)
 			me.Session = scoped_session(sessionmaker(bind=me.engine, autocommit=True))
 			# ------------------------------------------------

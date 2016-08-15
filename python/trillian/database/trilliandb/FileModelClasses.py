@@ -14,7 +14,7 @@ from sqlalchemy.orm import mapper, relationship, exc, column_property, validates
 from sqlalchemy import Column, Integer, ForeignKey, orm
 from sqlalchemy.orm.session import Session
 
-from ..utilities import memoize
+from ...utilities import memoize
 
 dbc = DatabaseConnection()
 

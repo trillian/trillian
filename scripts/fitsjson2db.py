@@ -88,46 +88,6 @@ except sqlalchemy.orm.exc.NoResultFound:
 except sqlalchemy.orm.exc.MultipleResultsFound:
 	# missing constraint in the database
 	raise Exception("More than one base path was found for '{0}' (shouldn't happen).".format(args.base_path))
-
-@memoize
-def getFitsHeaderKeywordObject(keyword=None):
-	''' Get (and cache) FITS header keyword objects from the 'fits_header_keyword' table. '''
-	if keyword is None:
-		raise Exception("keyword not specified!")
-	try:
-		theKeyword = session.query(FitsHeaderKeyword)\
-							.filter(FitsHeaderKeyword.label==keyword)\
-							.one()
-	except sqlalchemy.orm.exc.NoResultFound:
-		# create it here
-		theKeyword = FitsHeaderKeyword()
-		theKeyword.label = keyword
-		session.add(theKeyword)
-	except sqlalchemy.orm.exc.MultipleResultsFound:
-		raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
-		
-	assert theKeyword is not None, "'keyword' should not be 'None'"
-	return theKeyword
-
-@memoize
-def getFitsHeaderComment(comment=None):
-	''' Get (and cache) FITS header commend objects from the 'fits_header_comment' table. '''
-	if comment is None:
-		raise Exception("comment not specified!")
-	
-	try:
-		theComment = session.query(FitsHeaderComment)\
-							.filter(FitsHeaderComment.comment_string==comment)\
-							.one()
-	except sqlalchemy.orm.exc.NoResultFound:
-		# create it here
-		theComment = FitsHeaderComment()
-		theComment.comment_string = comment
-		session.add(theComment)
-	except sqlalchemy.orm.exc.MultipleResultsFound:
-		raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
-
-	return theComment
 	
 def addFileRecordToDatabase(fits_dict=None):
 	''' Takes a dictionary describing a FITS header and adds it to the dictionary. '''
@@ -175,7 +135,8 @@ def addFileRecordToDatabase(fits_dict=None):
 			keyword = header_line[0:8].rstrip() # remove trailing whitespace
 			value_and_comment = header_line[8:].rstrip() # shorter strings will result in ''
 
-			keywordObject = getFitsHeaderKeywordObject(keyword)
+			#keywordObject = getFitsHeaderKeywordObject(keyword)
+			keywordObject = FitsHeaderKeyword.objectFromString(session=session, keywordString=keyword)
 			
 			newHeaderValue = FitsHeaderValue()
 			session.add(newHeaderValue)
@@ -190,7 +151,7 @@ def addFileRecordToDatabase(fits_dict=None):
 			
 			if keyword in ["COMMENT", "HISTORY"]:
 				newHeaderValue.string_value = value_and_comment.strip()
-				newHeaderValue.comment_string = getFitsHeaderComment(keyword)
+				newHeaderValue.comment = FitsHeaderComment.objectFromString(session=session, commentString=value_and_comment.strip()) #getFitsHeaderComment(keyword)
 				line_parsed = True
 				
 			# look for string value + comment
@@ -201,17 +162,14 @@ def addFileRecordToDatabase(fits_dict=None):
 					# match group 2 is the characters being excluded
 					comment = match.group(3).strip()
 					if len(comment):
-						newHeaderValue.comment_string = getFitsHeaderComment(comment)
+						newHeaderValue.comment = FitsHeaderComment.objectFromString(session=session, commentString=comment) #getFitsHeaderComment(comment)
 					line_parsed = True
 			
-			# look for string value
+			# look for string value with no comment
 			if not line_parsed:
 				match = re.search("= ('([^']|'')*')", value_and_comment)
 				if match:
 					newHeaderValue.string_value = match.group(1)
-					comment = match.group(2).strip()
-					if len(comment) > 0:
-						newHeaderValue.comment_string = getFitsHeaderComment(comment)
 					line_parsed = True
 
 			# look for int or float + comment
@@ -221,7 +179,7 @@ def addFileRecordToDatabase(fits_dict=None):
 				newHeaderValue.numeric_value = float(match.group(1))
 				comment = match.group(2).strip()
 				if len(comment) > 0:
-					newHeaderValue.comment_string = getFitsHeaderComment(comment)
+					newHeaderValue.comment = FitsHeaderComment.objectFromString(session=session, commentString=comment) #getFitsHeaderComment(comment)
 				line_parsed = True
 				
 			# look for int or float alone
@@ -243,7 +201,7 @@ def addFileRecordToDatabase(fits_dict=None):
 					newHeaderValue.string_value = match.group(1)
 					comment = match.group(2).strip()
 					if len(comment) > 0:
-						newHeaderValue.comment_string = getFitsHeaderComment(comment)
+						newHeaderValue.comment = FitsHeaderComment.objectFromString(session=session, commentString=comment) #getFitsHeaderComment(comment)
 					line_parsed = True
 
 			# look for boolean value alone

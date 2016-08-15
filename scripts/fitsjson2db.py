@@ -287,6 +287,6 @@ else:
 			session.begin()
 
 		
-#session.commit()
+session.commit()
 db.engine.dispose()
 sys.exit(0)

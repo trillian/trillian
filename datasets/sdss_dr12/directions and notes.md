@@ -34,3 +34,10 @@ The root location of the imaging data is here:
 <http://data.sdss3.org/sas/dr12/boss/photoObj/frames/301/>
 
 There is a directory for each plate (named by plate ID). Within each plate directory is a directory for each camcol (1-6), and a `frames-run*.html` page that provides thumbnails for the plate (plus a checksum file). Within each camcol directory are the [frame](http://data.sdss3.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html) files (imaging products) over *ugriz*.
+
+##### FITS Header Extraction
+
+Run on SDSS servers with base path:
+
+    /uufs/chpc.utah.edu/common/home/sdss00/ebosswork/eboss/photoObj/frames/301
+

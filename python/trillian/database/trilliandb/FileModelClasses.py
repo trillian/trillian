@@ -55,7 +55,17 @@ class FitsHeaderKeyword(Base):
 				theKeyword = FitsHeaderKeyword()
 				theKeyword.label = keywordString
 				tempSession.add(theKeyword)
-				tempSession.commit()
+				
+				try:
+					tempSession.commit()
+				except sqlalchemy.exc.IntegrityError:
+					# since this session is in a "bubble", another process elsewhere
+					# (e.g. in a multiprocessing environment) could have beat us to it.
+					#
+					# Likely error:
+					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "fits_header_comment_uniq"
+					#
+					pass # since we know the value is there, the next query should succeed.
 			
 				# now pull it out into the given session
 				theKeyword = session.query(FitsHeaderKeyword)\
@@ -131,7 +141,17 @@ class FitsHeaderComment(Base):
 				theComment = FitsHeaderComment()
 				theComment.comment_string = commentString
 				tempSession.add(theComment)
-				tempSession.commit()
+				
+				try:
+					tempSession.commit()
+				except sqlalchemy.exc.IntegrityError:
+					# since this session is in a "bubble", another process elsewhere
+					# (e.g. in a multiprocessing environment) could have beat us to it.
+					#
+					# Likely error:
+					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "fits_header_comment_uniq"
+					#
+					pass # since we know the value is there, the next query should succeed.
 
 				# now pull it out into the given session
 				theComment = session.query(FitsHeaderComment)\

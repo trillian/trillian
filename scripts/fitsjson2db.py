@@ -273,10 +273,10 @@ if args.recursive:
 		session.commit() # commit for each directory
 		session.begin()
 else:
-	for filepath in os.listdir(args.source_directory):
+	for filename in os.listdir(args.source_directory):
 		
 		# read file containing JSON data
-		# filepath = os.path.join(root, filename)
+		filepath = os.path.join(args.source_directory, filename)
 		if filepath[-8:] == ".thdr.gz":
 			with gzip.open(filepath, mode="rt") as f: # explicitly open in text mode (default is "rb")
 				json_data = f.read()

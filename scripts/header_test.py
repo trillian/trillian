@@ -15,6 +15,15 @@ from trillian.database.trilliandb.FileModelClasses import *
 # Set up session
 session = db.Session()
 
+key = "SIMPLE"
+print(FitsHeaderKeyword.objectFromString(session=session, keywordString=key))
+print(FitsHeaderKeyword.objectFromString(session=session, keywordString=key))
+
+theKeyword = session.query(FitsHeaderKeyword)\
+								.filter(FitsHeaderKeyword.label==key)\
+								.one()
+print(theKeyword)
+								
 test_file = session.query(FitsFile).filter(FitsFile.filename=='frame-g-003959-1-0011.fits.bz2').one()
 
 for hdu in test_file.hdus:

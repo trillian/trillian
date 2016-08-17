@@ -181,6 +181,62 @@ class BasePath(Base):
 	__tablename__ = 'base_path'
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
+	@staticmethod
+	def objectFromString(session=None, path=None, add=False):
+		'''
+		Get the BasePath database object that matches the given path.
+		
+		@param session An SQLAlchemy Session instance.
+		@param path The base_path value of the BasePath.
+		@param add Boolean to indicate if a new entry should be added to the database if not found.
+		@returns A BasePath object that matches `base_path`, None otherwise.
+		'''
+		theBasePath = None
+		
+		if path is None:
+			raise Exception("A path was not provided!")
+		if session is None:
+			raise Exception("A session must be provided.")
+		
+		try:
+			theBasePath = session.query(BasePath)\
+									   .filter(BasePath.path==path)\
+									   .one()
+		except sqlalchemy.orm.exc.NoResultFound:
+			if add:
+				# create it here
+				# use a new session in case another running process might be doing the same
+				TempSession = scoped_session(sessionmaker(bind=dbc.engine, autocommit=True))
+				tempSession = TempSession()
+				
+				tempSession.begin()
+				theBasePath = BasePath()
+				theBasePath.path = path
+				tempSession.add(theBasePath)
+				
+				try:
+					tempSession.commit()
+				except sqlalchemy.exc.IntegrityError:
+					# since this session is in a "bubble", another process elsewhere
+					# (e.g. in a multiprocessing environment) could have beat us to it.
+					#
+					# Likely error:
+					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "fits_header_comment_uniq"
+					#
+					pass # since we know the value is there, the next query should succeed.
+
+				# now pull it out into the given session
+				theBasePath = session.query(BasePath)\
+									.filter(BasePath.path==path)\
+									.one()
+			else:
+				theBasePath = None
+		except sqlalchemy.orm.exc.MultipleResultsFound:
+			raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
+
+		return theBasePath
+
+
 class FileKind(Base):
 	__tablename__ = "file_kind"
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}

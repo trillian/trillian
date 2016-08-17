@@ -47,6 +47,61 @@ class Dataset(Base):
 class DatasetRelease(Base):
 	__tablename__ = 'dataset_release'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
+	
+	@staticmethod
+	def objectFromString(session=None, short_name=None, add=False):
+		'''
+		Get the DatasetRealease object that matches the provided string.
+
+		@param session An SQLAlchemy Session instance.
+		@param short_name The short_name value of the DatasetRelease.
+		@param add Boolean to indicate if a new entry should be added to the database if not found.
+		@returns A DatasetRelease object that matches `commentString`, None otherwise.
+		'''
+		theDatasetRelease = None
+		
+		if short_name is None:
+			raise Exception("{0}.{1} 'short_name' was not provided.".format(self.__module__, type(self).__name__))
+		if session is None:
+			raise Exception("{0}.{1} A session must be provided.".format(self.__module__, type(self).__name__))
+		
+		try:
+			theDatasetRelease = session.query(DatasetRelease)\
+									   .filter(DatasetRelease.short_name==short_name)\
+									   .one()
+		except sqlalchemy.orm.exc.NoResultFound:
+			if add:
+				# create it here
+				# use a new session in case another running process might be doing the same
+				TempSession = scoped_session(sessionmaker(bind=dbc.engine, autocommit=True))
+				tempSession = TempSession()
+				
+				tempSession.begin()
+				theDatasetRelease = DatasetRelease()
+				theDatasetRelease.short_name = short_name
+				tempSession.add(theDatasetRelease)
+				
+				try:
+					tempSession.commit()
+				except sqlalchemy.exc.IntegrityError:
+					# since this session is in a "bubble", another process elsewhere
+					# (e.g. in a multiprocessing environment) could have beat us to it.
+					#
+					# Likely error:
+					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "fits_header_comment_uniq"
+					#
+					pass # since we know the value is there, the next query should succeed.
+
+				# now pull it out into the given session
+				theDatasetRelease = session.query(DatasetRelease)\
+									.filter(DatasetRelease.short_name==short_name)\
+									.one()
+			else:
+				theDatasetRelease = None
+		except sqlalchemy.orm.exc.MultipleResultsFound:
+			raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
+
+		return theDatasetRelease
 
 class NodeToDatasetRelease(Base):
 	__tablename__ = 'node_to_dataset_release'

@@ -16,92 +16,95 @@ import json
 import gzip
 import os.path
 import argparse
-
+import multiprocessing
 import sqlalchemy
 
 from trillian.database.connections import LocalhostConnection as db
 from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
 from trillian.database.trilliandb.FileModelClasses import *
-#from trillian.utilities import gzopen
 from trillian.utilities import memoize
-
-parser = argparse.ArgumentParser(description="A script to import FITS JSON header files into the Trillian database.")
-parser.add_argument("-d", "--directory",
-					 help="root directory to search for FITS files",
-					 dest="source_directory",
-					 default=".",
-					 required=True)
-parser.add_argument("-b", "--base-path",
-					dest="base_path",
-					help="specifies the base directory (i.e. only store path below what's given)",
-					default=None,
-					required=False)
-parser.add_argument("-s", "--source",
-					dest="source",
-					help="Trillian short name identifier for this data source",
-					default=None,
-					required=True)
-parser.add_argument("-r", "--recursive",
-					help="search source directory recursively",
-					action="store_true",
-					default=False,
-					required=False)
-
-# Print help if no arguments are provided
-if len(sys.argv) < 2:
-	parser.print_help()
-	parser.exit(1)
-
-args = parser.parse_args()
-
-# Set up session
-session = db.Session()
-
-# -------------------------------------------------------------------
-# Set up data release - this script expects only one while being run.
-# -------------------------------------------------------------------
-try:
-	datasetRelease = session.query(DatasetRelease)\
-						 .filter(DatasetRelease.short_name==args.source)\
-						 .one()
-except sqlalchemy.orm.exc.NoResultFound:
-	raise Exception("The data release short name '{0}' was not found in the database.".format(args.source))
-except sqlalchemy.orm.exc.MultipleResultsFound:
-	# missing constraint in the database
-	raise Exception("More than one data release was found for '{0}' (shouldn't happen).".format(args.source))
-
-# ---------------------------------------------------
-# Look up base path if provided - must be set by hand
-# ---------------------------------------------------
-#
-# remove any trailing "/" to standardize on base paths
-if args.base_path and args.base_path[-1:] == "/":
-	args.base_path = args.base_path[0:-1]
-try:
-	basePath = session.query(BasePath)\
-					  .filter(BasePath.path==args.base_path)\
-					  .one()
-except sqlalchemy.orm.exc.NoResultFound:
-	errString = "The base path '{0}' was not found in the database".format(args.base_path)
-	errString = errString + "\n" + "Create with 'INSERT INTO file.base_path (path) VALUES ('{0}');'".format(args.base_path)
-	raise Exception("The base path '{0}' was not found in the database".format(args.base_path))
-except sqlalchemy.orm.exc.MultipleResultsFound:
-	# missing constraint in the database
-	raise Exception("More than one base path was found for '{0}' (shouldn't happen).".format(args.base_path))
 
 # define caches
 comment_cache = dict()
 keyword_cache = dict()
 
-def getCommentObject(sesssion, comment):
+def getCommentObject(session, comment):
 	try:
 		commentObject = comment_cache[comment]
 	except KeyError:
 		commentObject = FitsHeaderComment.objectFromString(session=session, commentString=comment)
 		comment_cache[comment] = commentObject
 	return commentObject
+
+def getBasePathObject(session=None, base_path=None):
+	# ---------------------------------------------------
+	# Look up base path if provided - must be set by hand
+	# ---------------------------------------------------
+	#
+	# remove any trailing "/" to standardize on base paths
+	if base_path is None:
+		return None
+	if base_path[-1:] == "/":
+		base_path = base_path[0:-1]
+	basePath = BasePath.objectFromString(session=session, path=base_path, add=False)
+	if basePath is None:
+		errString = "The base path '{0}' was not found in the database".format(base_path)
+		errString = errString + "\n" + "Create with 'INSERT INTO file.base_path (path) VALUES ('{0}');'".format(base_path)
+		raise Exception("The base path '{0}' was not found in the database".format(base_path))
+	return basePath
+
+def initialize_process():
+	'''
+	Perform any initialization needed as each process starts.
+	Use 'global' to make values available to other methods in the process
+	(not pretty, but it works).
+	Ref: http://stackoverflow.com/questions/10117073/how-to-use-initializer-to-set-up-my-multiprocess-pool
+	'''
+	db.engine.dispose() # force closing of all existing database connections
 	
-def addFileRecordToDatabase(fits_dict=None):
+def process_files(file_list):
+	
+	session = db.Session()
+	session.begin() # one session per directory / process
+	
+	datasetRelease = DatasetRelease.objectFromString(session=session, short_name=args.source)
+	if args.base_path:
+		basePath = getBasePathObject(session=session, base_path=args.base_path)
+	else:
+		basePath = None
+	
+	for filepath in file_list:
+		filename = os.path.basename(filepath)
+		if filename[-8:] == ".thdr.gz":
+			with gzip.open(filepath, mode="rt") as f:
+				json_data = f.read()
+		elif filename[-5] == ".thdr":
+			with open(filepath, encoding="utf-8") as f:
+				json_data = f.read()
+		else:
+			continue
+
+		# convert JSON data
+		fits_dict = json.loads(json_data)
+
+		# check if we have this file already
+		try:
+			f = session.query(FitsFile)\
+					   .join(DatasetRelease)\
+					   .filter(FitsFile.filename==fits_dict["filename"])\
+					   .filter(FitsFile.datasetRelease==datasetRelease)\
+					   .one()
+		except sqlalchemy.orm.exc.NoResultFound:
+			addFileRecordToDatabase(session=session,
+									fits_dict=fits_dict,
+									basePath=basePath,
+									dataset_release=datasetRelease)
+
+	#print("Finished with: {0}".format(file_list[-1]))
+	session.commit()
+		
+
+def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset_release=None):
 	''' Takes a dictionary describing a FITS header and adds it to the dictionary. '''
 	if fits_dict is None:
 		raise Exception("The parameter 'fits_dict' is not allowed to be None.")
@@ -118,8 +121,9 @@ def addFileRecordToDatabase(fits_dict=None):
 	# create database object
 	newFile = FitsFile()
 	session.add(newFile)
-	newFile.basePath = basePath
-	newFile.datasetRelease = datasetRelease
+	if basePath:
+		newFile.basePath = basePath
+	newFile.datasetRelease = dataset_release
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
 	newFile.relative_path = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
@@ -231,78 +235,82 @@ def addFileRecordToDatabase(fits_dict=None):
 				print("'{0}'".format(value_and_comment))
 				raise Exception("Could not parse the header line: " + "\n\n" + header_line + "\n\n")
 			
+def error_callback(exception):
+	print (exception)
+	
+##############################
 
-session.begin()
+if __name__ == "__main__":
 
-if args.recursive:
+	parser = argparse.ArgumentParser(description="A script to import FITS JSON header files into the Trillian database.")
+	parser.add_argument("-d", "--directory",
+						 help="root directory to search for FITS files (may specify several)",
+						 dest="source_directory",
+						 default=".",
+						 nargs="+",
+						 required=True)
+	parser.add_argument("-b", "--base-path",
+						dest="base_path",
+						help="specifies the base directory (i.e. only store path below what's given)",
+						default=None,
+						required=False)
+	parser.add_argument("-s", "--source",
+						dest="source",
+						help="Trillian short name identifier for this data source",
+						default=None,
+						required=True)
+	parser.add_argument("-r", "--recursive",
+						help="search source directory recursively",
+						action="store_true",
+						default=False,
+						required=False)
 
-	for root, subdirs, files in os.walk(args.source_directory):
-		# root: current path
-		# subdirs: list of directories in current path
-		# files: list of files in current path
+	# Print help if no arguments are provided
+	if len(sys.argv) < 2:
+		parser.print_help()
+		parser.exit(1)
+
+	args = parser.parse_args()
+
+	if args.recursive:
+
+		pool = multiprocessing.Pool(processes=35, initializer=initialize_process) # initargs=(queue,)
 		
-		for filename in files:
+		for dir in args.source_directory:
+			for root, subdirs, files in os.walk(dir):
+				# root: current path
+				# subdirs: list of directories in current path
+				# files: list of files in current path
 			
-			# get path from the base path
-			relative_path = os.path.relpath(root, args.base_path)
+				filepaths = list()
 
-			# read file containing JSON data
-			filepath = os.path.join(root, filename)
-			if filename[-8:] == ".thdr.gz":
-				with gzip.open(filepath, mode="rt") as f:
-					json_data = f.read()
-			elif filename[-5] == ".thdr":
-				with open(filepath, encoding="utf-8") as f:
-					json_data = f.read()
-			else:
-				continue
+				for filename in files:
+			
+					# get path from the base path
+					relative_path = os.path.relpath(root, args.base_path)
 
-			# convert JSON data
-			fits_dict = json.loads(json_data)
+					# read file containing JSON data
+					filepaths.append(os.path.join(root, filename))
+				
+				#print("Adding to pool: {0}".format(root))
+				if len(filepaths) > 0:
+					#pool.apply_async(func=process_files, args=(filepaths,), error_callback=error_callback)
+					pool.map_async(func=process_files, iterable=[filepaths], error_callback=error_callback)
 
-			# check if we have this file already
-			try:
-				f = session.query(FitsFile)\
-						   .join(DatasetRelease)\
-						   .filter(FitsFile.filename==fits_dict["filename"])\
-						   .filter(FitsFile.datasetRelease==datasetRelease)\
-						   .one()
-			except sqlalchemy.orm.exc.NoResultFound:
-				addFileRecordToDatabase(fits_dict)
+		pool.close() # prevents any more tasks from being added
+		pool.join()  # wait for all tasks to finish
 		
-		session.commit() # commit for each directory
-		session.begin()
-else:
-	for filename in os.listdir(args.source_directory):
-		
-		# read file containing JSON data
-		filepath = os.path.join(args.source_directory, filename)
-		if filepath[-8:] == ".thdr.gz":
-			with gzip.open(filepath, mode="rt") as f: # explicitly open in text mode (default is "rb")
-				json_data = f.read()
-		elif filepath[-5] == ".thdr":
-			with open(filepath, encoding='utf-8') as f:
-				json_data = f.read()
-		else:
-			continue
+	else:
+   
+		pool = multiprocessing.Pool(processes=35, initializer=initialize_process)
 
-		# convert JSON data
-		fits_dict = json.loads(json_data)
+		for dir in args.source_directory:
+			filepaths = [os.path.join(dir, filename) for filename in os.listdir(dir)]
+			if len(filepaths) > 0:
+				pool.map_async(func=process_files, iterable=[filepaths], error_callback=error_callback)
+				
+		pool.close()
+		pool.join()
 
-		# check if we have this file already
-		try:
-			f = session.query(FitsFile)\
-					   .join(DatasetRelease)\
-					   .filter(FitsFile.filename==fits_dict["filename"])\
-					   .filter(FitsFile.datasetRelease==datasetRelease)\
-					   .one()
-			continue # if found
-		except sqlalchemy.orm.exc.NoResultFound:
-			addFileRecordToDatabase(fits_dict)
-			session.commit() # commit for each file
-			session.begin()
-
-		
-session.commit()
 db.engine.dispose()
 sys.exit(0)

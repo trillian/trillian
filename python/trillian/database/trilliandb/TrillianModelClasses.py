@@ -7,6 +7,7 @@ import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, relationship, exc, column_property, validates
 from sqlalchemy import Column, orm
+#from sqlalchemy import func # for aggregate, other functions
 from sqlalchemy.orm.session import Session
 
 dbc = DatabaseConnection()
@@ -109,6 +110,10 @@ class NodeToDatasetRelease(Base):
 
 class Trixel(Base):
 	__tablename__ = 'trixel'
+	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
+
+class Footprint(Base):
+	__tablename__ = 'footprint'
 	__table_args__ = {'autoload' : True, 'schema' : 'trillian'}
 
 #class TrillianUser(Base):

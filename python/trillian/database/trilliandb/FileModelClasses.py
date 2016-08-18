@@ -6,11 +6,13 @@ ModelClasses file for schema "file".
 
 from ..DatabaseConnection import DatabaseConnection
 from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
-from .TrillianModelClasses import DatasetRelease
+from .TrillianModelClasses import DatasetRelease, Footprint
 
 import sqlalchemy
+from sqlalchemy.orm.session import Session
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import func # for aggregate, other functions
 
 from ...utilities import memoize
 
@@ -171,11 +173,33 @@ class FitsHDU(Base):
 	
 	def __repr__(self):
 		return "<{3}: pk={0}, file='{1}', hdu={2}>".format(self.pk, self.fitsFile.filename, self.number, type(self).__name__)
+	
+	def pseudoHeader(self, commets=False):
+		'''
+		A FITS header reconstructed from metadata in the database.
+		The header is not intended to exact reproduce the original file,
+		but may be good enough to pass to programs attempting to parse a real header.
+		'''
+		session = Session.object_session(self)
+		# the values are returned as single element tuples
+		return [x[0] for x in session.query(func.fits_header(self.pk)).all()]
+
+# 	def header(self, comments=False):
+# 		'''
+# 		Returns an array of strings that is a close approximation of the file's original header.
+# 		
+# 		@param Sepcify whether comments should also be retrieved.
+# 		'''
+# 		header = []
+# 		session = Session.object_session(self)
+# 		for header_value in self.headerValues:
+# 			header.append[
+# 			
+# 		return header
 
 class FitsFile(Base):
 	__tablename__ = 'fits_file'
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
-#	dataset_release_pk = Column(Integer, ForeignKey('trillian.dataset_release.pk'))
 
 class BasePath(Base):
 	__tablename__ = 'base_path'
@@ -236,9 +260,12 @@ class BasePath(Base):
 
 		return theBasePath
 
-
 class FileKind(Base):
 	__tablename__ = "file_kind"
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
+
+class FitsFileToFileKind(Base):
+	__tablename__ = "fits_file_to_file_kind"
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 # =========================
@@ -251,11 +278,14 @@ FitsFile.hdus = relationship(FitsHDU,
 							 order_by="asc(FitsHDU.number)",
 							 backref="fitsFile")
 FitsFile.basePath = relationship(BasePath, backref="fitsFiles")
-FitsFile.fileKind = relationship(FileKind, backref="fitsFiles")
+FitsFile.fileKinds = relationship(FileKind,
+								  secondary=FitsFileToFileKind.__table__,
+								  backref="fitsFiles")
 
 FitsHDU.headerValues = relationship(FitsHeaderValue,
 									order_by="asc(FitsHeaderValue.index)",
 									backref="hdu")
+FitsHDU.footprint = relationship(Footprint, backref="hdu")
 
 FitsHeaderValue.keyword = relationship(FitsHeaderKeyword, backref="headerValues")
 FitsHeaderValue.comment = relationship(FitsHeaderComment, backref="headerValues")

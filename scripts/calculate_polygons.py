@@ -10,6 +10,11 @@ import argparse
 
 import sqlalchemy
 from sqlalchemy import func
+import starlink.Ast as Ast
+import numpy as np
+from cornish.region import ASTBox, ASTPolygon
+from cornish.channel import FITSChannel
+from cornish.mapping import ASTFrame
 
 from trillian.database.connections import LocalhostConnection as db
 from trillian.database.connections import RemoteTunnelConnection as db
@@ -28,9 +33,8 @@ def processFilesWithoutPolygons(count=400):
 						.filter(Footprint.sky_polygon==None)\
 						.limit(count)\
 						.all()
-	raise Exception("")
-	
-	for image in images:
+	for hdu in image_hdus:
+		
 		
 		raise Exception("")
 		sys.exit(1)

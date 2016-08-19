@@ -174,7 +174,7 @@ class FitsHDU(Base):
 	def __repr__(self):
 		return "<{3}: pk={0}, file='{1}', hdu={2}>".format(self.pk, self.fitsFile.filename, self.number, type(self).__name__)
 	
-	def pseudoHeader(self, commets=False):
+	def pseudoHeader(self, comments=False):
 		'''
 		A FITS header reconstructed from metadata in the database.
 		The header is not intended to exact reproduce the original file,

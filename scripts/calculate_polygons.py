@@ -13,12 +13,12 @@ from sqlalchemy import func
 import starlink.Ast as Ast
 import numpy as np
 from cornish.region import ASTBox, ASTPolygon
-from cornish.channel import FITSChannel
+from cornish.channel import ASTFITSChannel
 from cornish.mapping import ASTFrame
 
 from trillian.database.connections import LocalhostConnection as db
 from trillian.database.connections import RemoteTunnelConnection as db
-from trillian.database.trilliandb.FileModelClasses import FitsHDU
+from trillian.database.trilliandb.FileModelClasses import FitsHDU, FitsFile
 from trillian.database.trilliandb.TrillianModelClasses import Footprint
 
 def processFilesWithoutPolygons(count=400):
@@ -30,12 +30,18 @@ def processFilesWithoutPolygons(count=400):
 	
 	image_hdus = session.query(FitsHDU)\
 						.outerjoin(Footprint)\
+						.join(FitsFile)\
 						.filter(Footprint.sky_polygon==None)\
+						.filter(FitsFile.filename.like('frame-g-006073-4-0063.fits%'))\
 						.limit(count)\
 						.all()
+
 	for hdu in image_hdus:
+		fitsChannel = ASTFITSChannel(header=hdu.pseudoHeader())
+
+		print(fitsChannel.boundingPolygon())
 		
-		
+#		print(np.rad2deg(fitsChannel.boundingPolygon().points))
 		raise Exception("")
 		sys.exit(1)
 	

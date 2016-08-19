@@ -24,7 +24,7 @@ theKeyword = session.query(FitsHeaderKeyword)\
 								.one()
 print(theKeyword)
 								
-test_file = session.query(FitsFile).filter(FitsFile.filename=='frame-g-003959-1-0011.fits.bz2').one()
+test_file = session.query(FitsFile).filter(FitsFile.filename=='frame-g-006073-4-0063.fits.bz2').one()
 
 for hdu in test_file.hdus:
 	for value in hdu.headerValues:

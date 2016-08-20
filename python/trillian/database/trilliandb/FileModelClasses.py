@@ -3,6 +3,7 @@
 '''
 ModelClasses file for schema "file".
 '''
+import ast
 
 from ..DatabaseConnection import DatabaseConnection
 from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
@@ -175,6 +176,27 @@ class FitsHDU(Base):
 		return "<{3}: pk={0}, file='{1}', hdu={2}>".format(self.pk, self.fitsFile.filename, self.number, type(self).__name__)
 	
 	def pseudoHeader(self, comments=False):
+		'''
+		
+		'''
+		session = Session.object_session(self)
+		headerValues = self.headerValues
+		fakeHeader = list()
+		for hv in headerValues:
+			keyword = hv.keyword.label
+			if keyword in ["HISTORY", "COMMENT"]:
+				fakeHeader.append("{0:8}{1}".format(keyword, hv.string_value))
+			elif hv.numeric_value is not None:
+				fakeHeader.append("{0:8}={1:>21}".format(keyword, hv.string_value))
+			elif hv.string_value in ["T", "F"]:
+				fakeHeader.append("{0:8}={1:>21}".format(keyword, hv.string_value))
+			elif hv.string_value[0] == "'":
+				fakeHeader.append("{0:8}= {1}".format(keyword, hv.string_value))
+			else:
+				raise Exception("Header type not handled: '{0}'".format(hv.string_value))
+		return fakeHeader
+	
+	def pseudoHeader2(self, comments=False):
 		'''
 		A FITS header reconstructed from metadata in the database.
 		The header is not intended to exact reproduce the original file,

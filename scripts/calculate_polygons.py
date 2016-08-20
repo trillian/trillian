@@ -33,16 +33,34 @@ def processFilesWithoutPolygons(count=400):
 						.join(FitsFile)\
 						.filter(Footprint.sky_polygon==None)\
 						.filter(FitsFile.filename.like('frame-g-006073-4-0063.fits%'))\
+						.filter(FitsHDU.number==1)\
 						.limit(count)\
 						.all()
 
+	keys = ["NAXIS", "NAXIS1", "NAXIS2", "CTYPE1", "CTYPE2", "CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2", "CD1_1", "CD1_2", "CD2_1", "CD2_2"]
+
 	for hdu in image_hdus:
+
+# 		trimmed_header = []
+# 		for card in hdu.pseudoHeader():
+# 			for key in keys:
+# 				if card.startswith(key):
+# 					trimmed_header.append(card)
+#		print(trimmed_header)
+
+		#hd = hdu.headerDict()
+		#trim_hd = dict()
+		#for key in keys:
+		#	if key in keys:
+		#		trim_hd[key] = hd[key]
+		#print(trim_hd)
+		print(hdu.pseudoHeader())
 		fitsChannel = ASTFITSChannel(header=hdu.pseudoHeader())
 
-		print(fitsChannel.boundingPolygon())
+		print(fitsChannel.boundingPolygon().points)
 		
 #		print(np.rad2deg(fitsChannel.boundingPolygon().points))
-		raise Exception("")
+		#raise Exception("")
 		sys.exit(1)
 	
 

@@ -40,4 +40,9 @@ There is a directory for each plate (named by plate ID). Within each plate direc
 Run on SDSS servers with base path:
 
     /uufs/chpc.utah.edu/common/home/sdss00/ebosswork/eboss/photoObj/frames/301
+##### FITS Header database import
+
+Importing JSON/FITS headers into database:
+
+    fitsjson2db.py --recursive --directory ~/trillian_data/datasets/sdssDR12/dr12_frame_headers --source dr12 --base-path /uufs/chpc.utah.edu/common/home/sdss00/ebosswork/eboss/photoObj/frames/301
 

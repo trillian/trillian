@@ -4,6 +4,7 @@
 This is a template for creating new scripts that access the Trillian database.
 '''
 
+import sys
 import sqlalchemy
 
 from trillian.database.connections import LocalhostConnection as db

@@ -184,6 +184,39 @@ class FitsHDU(Base):
 		# the values are returned as single element tuples
 		return [x[0] for x in session.query(func.fits_header(self.pk)).all()]
 
+	def headerDict(self):
+		'''
+		A dictionary of header values by keyword. Excludes COMMENT and HISTORY.
+		'''
+		import ast
+
+		session = Session.object_session(self)
+		hd = dict() # header dictionary
+		for headerValue in self.headerValues:
+			keyword = headerValue.keyword.label
+			if keyword in ["COMMENT", "HISTORY"]:
+				continue
+			s = headerValue.string_value
+			try:
+				# handles (float, int), converted to the correct type
+				value = ast.literal_eval(s)
+			except ValueError:
+				# string value
+				if s == "T":
+					value = True
+				elif s == "F":
+					value = False
+				else:
+					# a regular string - remove leading and trailing quotes if present
+					if s[0] == "'" and s[-1] == "'":
+						value = s[1:-1]
+					else:
+						value = s
+				
+			hd[keyword] = value
+			
+		return hd
+
 # 	def header(self, comments=False):
 # 		'''
 # 		Returns an array of strings that is a close approximation of the file's original header.

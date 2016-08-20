@@ -95,7 +95,7 @@ def process_files(file_list):
 
 		# convert JSON data
 		fits_dict = json.loads(json_data)
-
+		
 		# check if we have this file already
 		try:
 			f = session.query(FitsFile)\
@@ -334,7 +334,8 @@ if __name__ == "__main__":
 		pool = multiprocessing.Pool(processes=35, initializer=initialize_process)
 
 		for dir in args.source_directory:
-			filepaths = [os.path.join(dir, filename) for filename in os.listdir(dir)]
+			# only select files; recursive more not selected
+			filepaths = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(f)]
 			if len(filepaths) > 0:
 				pool.map_async(func=process_files, iterable=[filepaths], error_callback=error_callback)
 				

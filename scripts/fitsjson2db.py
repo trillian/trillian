@@ -27,6 +27,7 @@ from trillian.utilities import memoize
 # define caches
 comment_cache = dict()
 keyword_cache = dict()
+paths_cache   = dict()
 
 def getCommentObject(session, comment):
 	try:
@@ -118,7 +119,20 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	# sha256 : sha256 has in hex format 
 	#
 	
+	# get relative path object
+	#
+	relative_path_string = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
+	if relative_path_string.endswith("/"):
+		relative_path_string = relative_path_string[0:-1]
+		
+	try:
+		relative_path = paths_cache[relative_path_string]
+	except KeyError:
+		relative_path = DirectoryPath.objectFromString(session=session, path=relative_path_string, add=True)
+		paths_cache[relative_path_string] = relative_path
+	
 	# create database object
+	#
 	newFile = FitsFile()
 	session.add(newFile)
 	if basePath:
@@ -126,7 +140,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	newFile.datasetRelease = dataset_release
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
-	newFile.relative_path = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
+	newFile.relativePath = relative_path
 	if 'sha256' in fits_dict:
 		newFile.sha256_hash = fits_dict['sha256']
 	

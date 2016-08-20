@@ -269,14 +269,9 @@ class DirectoryPath(Base):
 		return "<{0}.{1} object at {2}: '{3}'>".format(self.__module__, type(self).__name__, hex(id(self)), self.path)
 
 	@staticmethod
-	def objectFromString(session=None, path=None, add=False):
+	def objectFromString(session=None, path=None, add=False, type_string=None):
 		'''
-		Get the DirectoryPath database object that matches the given path.
 		
-		@param session An SQLAlchemy Session instance.
-		@param path The 'path' value of the DirectoryPath.
-		@param add Boolean to indicate if a new entry should be added to the database if not found.
-		@returns A DirectoryPath object that matches `path`, None otherwise.
 		'''
 		theDirectoryPath = None
 		
@@ -287,7 +282,9 @@ class DirectoryPath(Base):
 		
 		try:
 			theDirectoryPath = session.query(DirectoryPath)\
+									  .join(DirectoryPathType)\
 									  .filter(DirectoryPath.path==path)\
+									  .filter(DirectoryPathType.label==type_string)\
 									  .one()
 		except sqlalchemy.orm.exc.NoResultFound:
 			if add:
@@ -299,6 +296,7 @@ class DirectoryPath(Base):
 				tempSession.begin()
 				theDirectoryPath = DirectoryPath()
 				theDirectoryPath.path = path
+				theDirectoryPath.type = tempSession.query(DirectoryPathType).filter(DirectoryPathType.label==type_string).one()
 				tempSession.add(theDirectoryPath)
 				
 				try:
@@ -314,7 +312,9 @@ class DirectoryPath(Base):
 
 				# now pull it out into the given session
 				theDirectoryPath = session.query(DirectoryPath)\
+										  .join(DirectoryPathType)\
 										  .filter(DirectoryPath.path==path)\
+										  .filter(DirectoryPathType.label==type_string)\
 										  .one()
 			else:
 				theDirectoryPath = None
@@ -322,6 +322,81 @@ class DirectoryPath(Base):
 			raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
 
 		return theDirectoryPath
+
+	@staticmethod
+	def relativePathFromString(session=None, path=None, add=False):
+		'''
+		Get the DirectoryPath database object that matches the given path.
+		
+		@param session An SQLAlchemy Session instance.
+		@param path The 'path' value of the DirectoryPath.
+		@param add Boolean to indicate if a new entry should be added to the database if not found.
+		@returns A DirectoryPath object that matches `path`, None otherwise.
+		'''
+		return DirectoryPath.objectFromString(session=session, path=path, type_string="relative path", add=add)
+
+	@staticmethod
+	def basePathFromString(session=None, path=None, add=False):
+		'''
+		Get the DirectoryPath database object that matches the given path.
+		
+		@param session An SQLAlchemy Session instance.
+		@param path The 'path' value of the DirectoryPath.
+		@param add Boolean to indicate if a new entry should be added to the database if not found.
+		@returns A DirectoryPath object that matches `path`, None otherwise.
+		'''
+		return DirectoryPath.objectFromString(session=session, path=path, type_string="base path", add=add)
+
+# 		theDirectoryPath = None
+# 		relative_path_label = "relative path"
+# 		
+# 		if path is None:
+# 			raise Exception("A path was not provided!")
+# 		if session is None:
+# 			raise Exception("A session must be provided.")
+# 		
+# 		try:
+# 			theDirectoryPath = session.query(DirectoryPath)\
+# 									  .join(DirectoryPathType)\
+# 									  .filter(DirectoryPath.path==path)\
+# 									  .filter(DirectoryPathType.label==relative_path_label)\
+# 									  .one()
+# 		except sqlalchemy.orm.exc.NoResultFound:
+# 			if add:
+# 				# create it here
+# 				# use a new session in case another running process might be doing the same
+# 				TempSession = scoped_session(sessionmaker(bind=dbc.engine, autocommit=True))
+# 				tempSession = TempSession()
+# 				
+# 				tempSession.begin()
+# 				theDirectoryPath = DirectoryPath()
+# 				theDirectoryPath.path = path
+# 				theDirectoryPath.type = tempSession.query(DirectoryPathType).filter(DirectoryPathType.label==relative_path_label).one()
+# 				tempSession.add(theDirectoryPath)
+# 				
+# 				try:
+# 					tempSession.commit()
+# 				except sqlalchemy.exc.IntegrityError:
+# 					# since this session is in a "bubble", another process elsewhere
+# 					# (e.g. in a multiprocessing environment) could have beat us to it.
+# 					#
+# 					# Likely error:
+# 					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "fits_header_comment_uniq"
+# 					#
+# 					pass # since we know the value is there, the next query should succeed.
+# 
+# 				# now pull it out into the given session
+# 				theDirectoryPath = session.query(DirectoryPath)\
+# 										  .join(DirectoryPathType)\
+# 										  .filter(DirectoryPath.path==path)\
+# 										  .filter(DirectoryPathType.label==relative_path_label)\
+# 										  .one()
+# 			else:
+# 				theDirectoryPath = None
+# 		except sqlalchemy.orm.exc.MultipleResultsFound:
+# 			raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
+# 
+# 		return theDirectoryPath
 
 class FitsFileToDirectoryPath(Base):
 	__tablename__ = "fits_file_to_directory_path"

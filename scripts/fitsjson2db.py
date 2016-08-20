@@ -48,7 +48,7 @@ def getBasePathObject(session=None, base_path=None):
 		return None
 	if base_path[-1:] == "/":
 		base_path = base_path[0:-1]
-	basePath = DirectoryPath.objectFromString(session=session, path=base_path, add=False)
+	basePath = DirectoryPath.basePathFromString(session=session, path=base_path, add=False)
 	if basePath is None:
 		errString = "The base path '{0}' was not found in the database".format(base_path)
 		errString = errString + "\n" + "Create with 'INSERT INTO file.base_path (path) VALUES ('{0}');'".format(base_path)
@@ -133,24 +133,29 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	if relative_path_string.endswith("/"):
 		relative_path_string = relative_path_string[0:-1]
 		
-	try:
+	if relative_path_string in paths_cache:
 		relativePath = paths_cache[relative_path_string]
-	except KeyError:
-		relativePath = DirectoryPath(path=relative_path_string)
-		relativePath.type = path_types_cache["relative"]
-		session.add(relativePath)
-		paths_cache[relative_path_string] = relativePath
+	else:
+		try:
+			relativePath = session.query(DirectoryPath)\
+								  .filter(DirectoryPath.path==relative_path_string)\
+								  .one()
+		except sqlalchemy.orm.exc.NoResultFound:
+			relativePath = DirectoryPath(path=relative_path_string)
+			relativePath.type = path_types_cache["relative"]
+			session.add(relativePath)
+			paths_cache[relative_path_string] = relativePath
 	
 	# create database object
 	#
 	newFile = FitsFile()
 	session.add(newFile)
 	if basePath:
-		newFile.basePath = basePath
+		newFile.directoryPaths.append(basePath)
 	newFile.datasetRelease = dataset_release
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
-	newFile.relativePath = relativePath
+	newFile.directoryPaths.append(relativePath)
 	if 'sha256' in fits_dict:
 		newFile.sha256_hash = fits_dict['sha256']
 	
@@ -195,7 +200,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 			
 			if keyword in ["COMMENT", "HISTORY"]:
 				newHeaderValue.string_value = value_and_comment.strip()
-				newHeaderValue.comment = getCommentObject(session, value_and_comment.strip()) #FitsHeaderComment.objectFromString(session=session, commentString=value_and_comment.strip())
+				newHeaderValue.comment = getCommentObject(session, value_and_comment.strip())
 				line_parsed = True
 				
 			# look for string value + comment
@@ -206,7 +211,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 					# match group 2 is the characters being excluded
 					comment = match.group(3).strip()
 					if len(comment):
-						newHeaderValue.comment = getCommentObject(session, comment) #FitsHeaderComment.objectFromString(session=session, commentString=comment)
+						newHeaderValue.comment = getCommentObject(session, comment)
 					line_parsed = True
 			
 			# look for string value with no comment
@@ -217,13 +222,13 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 					line_parsed = True
 
 			# look for int or float + comment
-			match = re.search("=\s*([-+0-9Ee.]+).*\/(.*)", value_and_comment)
+			match = re.search("=\s*([-+0-9Ee.]+).*?\/(.*)", value_and_comment)
 			if match:
 				newHeaderValue.string_value = match.group(1)
 				newHeaderValue.numeric_value = float(match.group(1))
 				comment = match.group(2).strip()
 				if len(comment) > 0:
-					newHeaderValue.comment = getCommentObject(session, comment) # FitsHeaderComment.objectFromString(session=session, commentString=comment)
+					newHeaderValue.comment = getCommentObject(session, comment)
 				line_parsed = True
 				
 			# look for int or float alone
@@ -245,7 +250,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 					newHeaderValue.string_value = match.group(1)
 					comment = match.group(2).strip()
 					if len(comment) > 0:
-						newHeaderValue.comment = getCommentObject(session, comment) # FitsHeaderComment.objectFromString(session=session, commentString=comment)
+						newHeaderValue.comment = getCommentObject(session, comment)
 					line_parsed = True
 
 			# look for boolean value alone

@@ -28,6 +28,7 @@ from trillian.utilities import memoize
 comment_cache = dict()
 keyword_cache = dict()
 paths_cache   = dict()
+path_types_cache = dict()
 
 def getCommentObject(session, comment):
 	try:
@@ -47,7 +48,7 @@ def getBasePathObject(session=None, base_path=None):
 		return None
 	if base_path[-1:] == "/":
 		base_path = base_path[0:-1]
-	basePath = BasePath.objectFromString(session=session, path=base_path, add=False)
+	basePath = DirectoryPath.objectFromString(session=session, path=base_path, add=False)
 	if basePath is None:
 		errString = "The base path '{0}' was not found in the database".format(base_path)
 		errString = errString + "\n" + "Create with 'INSERT INTO file.base_path (path) VALUES ('{0}');'".format(base_path)
@@ -73,6 +74,13 @@ def process_files(file_list):
 		basePath = getBasePathObject(session=session, base_path=args.base_path)
 	else:
 		basePath = None
+	
+	# Get some useful objects
+	#
+	relativePathType = session.query(DirectoryPathType).filter(DirectoryPathType.label=="relative path").one()
+	basePathType = session.query(DirectoryPathType).filter(DirectoryPathType.label=="base path").one()
+	path_types_cache["relative"] = relativePathType
+	path_types_cache["base"] = basePathType
 	
 	for filepath in file_list:
 		filename = os.path.basename(filepath)
@@ -126,10 +134,12 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 		relative_path_string = relative_path_string[0:-1]
 		
 	try:
-		relative_path = paths_cache[relative_path_string]
+		relativePath = paths_cache[relative_path_string]
 	except KeyError:
-		relative_path = DirectoryPath.objectFromString(session=session, path=relative_path_string, add=True)
-		paths_cache[relative_path_string] = relative_path
+		relativePath = DirectoryPath(path=relative_path_string)
+		relativePath.type = path_types_cache["relative"]
+		session.add(relativePath)
+		paths_cache[relative_path_string] = relativePath
 	
 	# create database object
 	#
@@ -140,7 +150,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	newFile.datasetRelease = dataset_release
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
-	newFile.relativePath = relative_path
+	newFile.relativePath = relativePath
 	if 'sha256' in fits_dict:
 		newFile.sha256_hash = fits_dict['sha256']
 	
@@ -301,7 +311,7 @@ if __name__ == "__main__":
 				for filename in files:
 			
 					# get path from the base path
-					relative_path = os.path.relpath(root, args.base_path)
+					#relative_path = os.path.relpath(root, args.base_path)
 
 					# read file containing JSON data
 					filepaths.append(os.path.join(root, filename))

@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-from ..DatabaseConnection import DatabaseConnection
-from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
-
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, relationship, exc, column_property, validates
@@ -10,7 +7,20 @@ from sqlalchemy import Column, orm
 #from sqlalchemy import func # for aggregate, other functions
 from sqlalchemy.orm.session import Session
 
+from ..DatabaseConnection import DatabaseConnection
+from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
+from ..pggeometry import PGPoint
+
 dbc = DatabaseConnection()
+
+# -----------------------------------------
+# This is to hide the warning:
+# /usr/local/anaconda3/lib/python3.4/site-packages/sqlalchemy/dialects/postgresql/base.py:2505: SAWarning: Did not recognize type 'point' of column 'map'
+# This defines the class PGPoint for any column of type 'point'.
+# -----------------------------------------
+from sqlalchemy.dialects.postgresql import base as pg
+pg.ischema_names['point'] = PGPoint
+# -----------------------------------------
 
 # ========================
 # Define database classes

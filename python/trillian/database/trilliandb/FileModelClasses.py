@@ -256,21 +256,29 @@ class FitsFile(Base):
 	__tablename__ = 'fits_file'
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
-class BasePath(Base):
-	__tablename__ = 'base_path'
+class DirectoryPath(Base):
+	__tablename__ = 'directory_path'
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
+
+	def __init__(self, path=None):
+		if not isinstance(path, str):
+			raise Exception("DirectoryPath: expected 'path' to be of string type.")
+		self.path = path
+		
+	def __repr__(self):
+		return "<{0}.{1} object at {2}: '{3}'>".format(self.__module__, type(self).__name__, hex(id(self)), self.path)
 
 	@staticmethod
 	def objectFromString(session=None, path=None, add=False):
 		'''
-		Get the BasePath database object that matches the given path.
+		Get the DirectoryPath database object that matches the given path.
 		
 		@param session An SQLAlchemy Session instance.
-		@param path The base_path value of the BasePath.
+		@param path The 'path' value of the DirectoryPath.
 		@param add Boolean to indicate if a new entry should be added to the database if not found.
-		@returns A BasePath object that matches `base_path`, None otherwise.
+		@returns A DirectoryPath object that matches `path`, None otherwise.
 		'''
-		theBasePath = None
+		theDirectoryPath = None
 		
 		if path is None:
 			raise Exception("A path was not provided!")
@@ -278,9 +286,9 @@ class BasePath(Base):
 			raise Exception("A session must be provided.")
 		
 		try:
-			theBasePath = session.query(BasePath)\
-									   .filter(BasePath.path==path)\
-									   .one()
+			theDirectoryPath = session.query(DirectoryPath)\
+									  .filter(DirectoryPath.path==path)\
+									  .one()
 		except sqlalchemy.orm.exc.NoResultFound:
 			if add:
 				# create it here
@@ -289,9 +297,9 @@ class BasePath(Base):
 				tempSession = TempSession()
 				
 				tempSession.begin()
-				theBasePath = BasePath()
-				theBasePath.path = path
-				tempSession.add(theBasePath)
+				theDirectoryPath = DirectoryPath()
+				theDirectoryPath.path = path
+				tempSession.add(theDirectoryPath)
 				
 				try:
 					tempSession.commit()
@@ -305,19 +313,33 @@ class BasePath(Base):
 					pass # since we know the value is there, the next query should succeed.
 
 				# now pull it out into the given session
-				theBasePath = session.query(BasePath)\
-									.filter(BasePath.path==path)\
-									.one()
+				theDirectoryPath = session.query(DirectoryPath)\
+										  .filter(DirectoryPath.path==path)\
+										  .one()
 			else:
-				theBasePath = None
+				theDirectoryPath = None
 		except sqlalchemy.orm.exc.MultipleResultsFound:
 			raise Exception("Database integrity error: multiple keyword records with label '{0}' found.".format(keyword))
 
-		return theBasePath
+		return theDirectoryPath
+
+class FitsFileToDirectoryPath(Base):
+	__tablename__ = "fits_file_to_directory_path"
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
+
+class DirectoryPathType(Base):
+	__tablename__ = "directory_path_type"
+	__table_args__ = {'autoload' : True, 'schema' : 'files'}
+
+	def __repr__(self):
+		return "<{0}.{1} object at {2}: '{3}'>".format(self.__module__, type(self).__name__, hex(id(self)), self.label)
 
 class FileKind(Base):
 	__tablename__ = "file_kind"
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
+
+	def __repr__(self):
+		return "<{0}.{1} object at {2}: '{3}'>".format(self.__module__, type(self).__name__, hex(id(self)), self.label)
 
 class FitsFileToFileKind(Base):
 	__tablename__ = "fits_file_to_file_kind"
@@ -332,10 +354,19 @@ FitsFile.datasetRelease = relationship(DatasetRelease, backref="fitsFiles")
 FitsFile.hdus = relationship(FitsHDU,
 							 order_by="asc(FitsHDU.number)",
 							 backref="fitsFile")
-FitsFile.basePath = relationship(BasePath, backref="fitsFiles")
+#FitsFile.directoryPath = relationship(DirectoryPath, backref="fitsFiles")
+#FitsFile.relativePath = relationship(DirectoryPath, backref="fitsFiles")
+
+FitsFile.directoryPaths = relationship(DirectoryPath,
+									   secondary=FitsFileToDirectoryPath.__table__,
+									   backref="fitsFile")
+
+
 FitsFile.fileKinds = relationship(FileKind,
 								  secondary=FitsFileToFileKind.__table__,
 								  backref="fitsFiles")
+
+DirectoryPath.type = relationship(DirectoryPathType, backref="directories")
 
 FitsHDU.headerValues = relationship(FitsHeaderValue,
 									order_by="asc(FitsHeaderValue.index)",

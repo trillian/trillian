@@ -193,7 +193,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 					line_parsed = True
 
 			# look for int or float + comment
-			match = re.search("=\s*([\-0-9.]+).*\/(.*)", value_and_comment)
+			match = re.search("=\s*([-+0-9Ee.]+).*\/(.*)", value_and_comment)
 			if match:
 				newHeaderValue.string_value = match.group(1)
 				newHeaderValue.numeric_value = float(match.group(1))
@@ -204,7 +204,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 				
 			# look for int or float alone
 			if not line_parsed:
-				match = re.search("([\-0-9.]+)$", value_and_comment)
+				match = re.search("([-+0-9Ee.]+)$", value_and_comment)
 				if match:
 					newHeaderValue.string_value = match.group(1)
 					try:

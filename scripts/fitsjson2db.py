@@ -111,7 +111,7 @@ def process_files(file_list):
 
 	#print("Finished with: {0}".format(file_list[-1]))
 	session.commit()
-		
+	db.engine.dispose() # close all database connections
 
 def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset_release=None):
 	''' Takes a dictionary describing a FITS header and adds it to the dictionary. '''

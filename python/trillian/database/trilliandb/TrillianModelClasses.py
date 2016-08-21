@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 
 from ..DatabaseConnection import DatabaseConnection
 from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
-from ..pggeometry import PGPoint
+from ..pggeometry import PGPoint, PGPolygon
 
 dbc = DatabaseConnection()
 
@@ -20,6 +20,7 @@ dbc = DatabaseConnection()
 # -----------------------------------------
 from sqlalchemy.dialects.postgresql import base as pg
 pg.ischema_names['point'] = PGPoint
+pg.ischema_names['polygon'] = PGPolygon
 # -----------------------------------------
 
 # ========================

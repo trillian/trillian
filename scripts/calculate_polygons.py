@@ -21,12 +21,16 @@ from trillian.database.connections import RemoteTunnelConnection as db
 from trillian.database.trilliandb.FileModelClasses import FitsHDU, FitsFile
 from trillian.database.trilliandb.TrillianModelClasses import Footprint
 
+# These are the only keys needed to create the polygon.
+wcs_keys = ["NAXIS", "NAXIS1", "NAXIS2", "CTYPE1", "CTYPE2", "CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2", "CD1_1", "CD1_2", "CD2_1", "CD2_2"]
+
 def processFilesWithoutPolygons(count=400):
 	'''
 	This function goes to the database, get 'count' images that don't have polygons, and calculates them.
 	'''
 	db.engine.dispose() # close all connections for a multiprocessing environment
 	session = db.Session()
+	session.begin()
 	
 	image_hdus = session.query(FitsHDU)\
 						.outerjoin(Footprint)\
@@ -37,41 +41,22 @@ def processFilesWithoutPolygons(count=400):
 						.limit(count)\
 						.all()
 
-	keys = ["NAXIS", "NAXIS1", "NAXIS2", "CTYPE1", "CTYPE2", "CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2", "CD1_1", "CD1_2", "CD2_1", "CD2_2"]
 
 	for hdu in image_hdus:
 
-# 		trimmed_header = []
-# 		for card in hdu.pseudoHeader():
-# 			for key in keys:
-# 				if card.startswith(key):
-# 					trimmed_header.append(card)
-#		print(trimmed_header)
-
-		#hd = hdu.headerDict()
-		#trim_hd = dict()
-		#for key in keys:
-		#	if key in keys:
-		#		trim_hd[key] = hd[key]
-		#print(trim_hd)
-		print(hdu.pseudoHeader())
 		fitsChannel = ASTFITSChannel(header=hdu.pseudoHeader())
-
-		print(fitsChannel.boundingPolygon().points)
+		points = fitsChannel.boundingPolygon().points # returned as radians
 		
-#		print(np.rad2deg(fitsChannel.boundingPolygon().points))
-		#raise Exception("")
-		sys.exit(1)
-	
+		footprint = Footprint()
+		footprint.hdu = hdu
+		footprint.sky_polygon = np.rad2deg(points)
+		session.add(footprint)
+		
+	session.commit()	
 
 if __name__ == "__main__":
 	
 	parser = argparse.ArgumentParser(description="A script to extract headers from FITS files.")
-	parser.add_argument("-s", "--source",
-					dest="source",
-					help="Trillian short name identifier for this data source",
-					default=None,
-					required=True)
 
 	# Print help if no arguments are provided
 	#if len(sys.argv) < 2:
@@ -83,12 +68,5 @@ if __name__ == "__main__":
 	processFilesWithoutPolygons(count=10)
 	
 
-
-# Set up session
-session = db.Session()
-
-
-
-#session.commit()
 db.engine.dispose()
 sys.exit(0)

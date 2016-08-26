@@ -1,6 +1,6 @@
 ## SDSS Data
 
-These are the notes and directions for populating the SDSS imaging data. This is comprised of a catalog and imaging. Here I have designed a new schema that improves upon that found in CAS.
+These are the notes and directions for populating the SDSS data. This is comprised of a catalog and imaging data (spectra not yet included). Here I have designed a new schema that improves upon that found in CAS.
 
 ### PhotoObj Catalog
 
@@ -34,6 +34,8 @@ The root location of the imaging data is here:
 <http://data.sdss3.org/sas/dr12/boss/photoObj/frames/301/>
 
 There is a directory for each plate (named by plate ID). Within each plate directory is a directory for each camcol (1-6), and a `frames-run*.html` page that provides thumbnails for the plate (plus a checksum file). Within each camcol directory are the [frame](http://data.sdss3.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html) files (imaging products) over *ugriz*.
+
+Total size of gzipped imaging (`frame-*`) files: 18.81 TB (18813743111741 bytes)
 
 ##### FITS Header Extraction
 

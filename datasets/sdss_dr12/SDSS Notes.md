@@ -45,4 +45,16 @@ Run on SDSS servers with base path:
 Importing JSON/FITS headers into database:
 
     fitsjson2db.py --recursive --directory ~/trillian_data/datasets/sdssDR12/dr12_frame_headers --source dr12 --base-path /uufs/chpc.utah.edu/common/home/sdss00/ebosswork/eboss/photoObj/frames/301
+Query to check SDSS DR12 frame import:
+
+    SELECT DISTINCT fits_header_value.numeric_value::integer, count(fits_header_value.numeric_value::integer) FROM fits_header_value
+    JOIN fits_header_keyword ON fits_header_keyword.pk=fits_header_value.fits_header_keyword_pk
+    JOIN fits_hdu ON fits_hdu.pk=fits_header_value.fits_hdu_pk
+    --JOIN fits_file on fits_file.pk=fits_hdu.fits_file_pk
+    WHERE fits_header_keyword.label='RUN' AND fits_hdu.number = 1
+    AND fits_header_value.numeric_value > 0
+    GROUP BY fits_header_value.numeric_value::integer
+    ORDER BY fits_header_value.numeric_value::integer;
+
+
 

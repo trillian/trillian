@@ -12,7 +12,7 @@ Survey Modes:
 * direct imaging - all-sky survey covered 2/3 of the sky
 * spectroscopic (grism)
 
-Data was released in a series of "General Releases" (GR), as in GR2, GR3, etc.
+Data was released in a series of “General Releases” (GR), as in GR2, GR3, etc.
 
 
 
@@ -30,11 +30,27 @@ Link to details of each survey: [http://www.galex.caltech.edu/researcher/techdoc
 
 
 
+| Survey                                   | Associated Imaging Survey | No. Tiles |
+| ---------------------------------------- | ------------------------- | --------: |
+| All-Sky Imaging (AIS)                    |                           |    34,285 |
+| Calibration Survey (CAI)                 |                           |        87 |
+| Deep Imaging Survey (DIS)                |                           |       720 |
+| Guest Investigator Data (GII)            |                           |     2,112 |
+| Medium Imaging Survey (MIS)              |                           |     6,964 |
+| Nearby Galaxy Survey (NGS)               |                           |       715 |
+| Calibration Survey (Spectra) (CAS)       | CAI                       |        36 |
+| Deep Spectroscopic Survey (DSS)          | DIS                       |         1 |
+| Medium Spectroscopic Survey (MSS)        | DIS                       |         5 |
+| Wide Spectroscopic Survey (WSS)          | DIS                       |        10 |
+| Nearby Galaxy Spectroscopic Survey (ETS) | NGS                       |        24 |
+
+
+
 #### All Sky Imaging Survey (AIS)
 
 Number of tiles: 34,285.
 
-Link to list all tiles: [http://galex.stsci.edu/GR6/?page=tilelist&survey=ais&showall=Y](http://galex.stsci.edu/GR6/?page=tilelist&survey=ais&showall=Y)
+Link to list all tiles (database form): [http://galex.stsci.edu/GR6/?page=tilelist&survey=ais&showall=Y](http://galex.stsci.edu/GR6/?page=tilelist&survey=ais&showall=Y)
 
 #### Nearby Galaxy Survey (NGS)
 
@@ -104,11 +120,36 @@ Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/kepler/](https://
 
 ## Data Access
 
-Data access is through the MAST archive. Files can be directly access via HTTP from here: [https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html](https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html)
+#### Imaging Data
 
-Web page describing the directory structure: [https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html](https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html)
+Location: ???
 
-The sky has been divided in 192 chunks numbered from 0-191. Each chunck corresponds to a Healpix pixel at a resolution of Nside = 4 (nested scheme). Not all chunks have observations.
+Pipeline data guide: <http://asd.gsfc.nasa.gov/archive/galex/Documents/ERO_data_description_3.htm>
+
+Data from single-orbit visits are stored in a single directory with the format:
+
+    <ROOT>/<proc ver>/<tile>/<obs mode>/<product>/<image>/<try>/.
+`proc-ver` : processing version number [`01-vsn`, `02-vsn`]
+
+`tile` : Tile identification string
+
+`obs-mode` : Instrument observing mode (`d`=direct, `g`=grim, `o`=opaque)
+
+`product` : Data product type (single visit, multiple visits)
+
+`try` : Pipeline processing try, e.g. `07-try`
+
+#### Catalogs
+
+Data access is through the MAST archive. Files can be directly access via HTTP from here:
+
+* Top level:  <https://archive.stsci.edu/pub/hlsp/gcat/>
+* GASC: <https://archive.stsci.edu/pub/hlsp/gcat/asc/>
+* GMSC: <https://archive.stsci.edu/pub/hlsp/gcat/msc/>
+
+Web page describing the directory structure: <https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html>
+
+The sky has been divided in 192 chunks numbered from 0-191. Each chunk corresponds to a HEALPix pixel at a resolution of Nside = 4 (nested scheme). Not all chunks have observations.
 
 1 chunk = 215 deg$^2$
 
@@ -117,6 +158,12 @@ GASC : 189 chunks
 GMSC : 174 chunks
 
 There is one directory per chunk (named with the "chunk ID").
+
+#### MAST
+
+MAST database schema: <http://galex.stsci.edu/GR6/?page=dbinfo>
+
+Database query: <http://galex.stsci.edu/GR6/?page=sqlform>
 
 
 

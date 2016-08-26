@@ -7,14 +7,17 @@ Created 2 May 2016
 @author: Demitri Muna
 """
 
+import re
 import os
 import bz2
 import gzip
 import pathlib # Python 3.4+
+import subprocess
+import logging
 
 import fitsio
 
-from .files import hashfile
+from .files import sha256hash
 
 def is_fits_file(filepath, read_compressed=False, robust_check=False):
 	'''
@@ -83,7 +86,7 @@ def extract_FITS_header(filepath=None, HDU=None):
 		header = hdu.read_header() # -> fitsio.FITSHDR
 		cards = list()
 		for record in header.records():
-			cards.append(record["card"]) # only read the "raw" header line
+			cards.append(record["card_string"]) # only read the "raw" header line
 		header_data["header"] = cards
 		
 		header_data["hdu"] = i+1
@@ -100,15 +103,50 @@ def extract_FITS_header(filepath=None, HDU=None):
 	
 	# get file-level data
 	# -------------------
-	data["size"] = os.path.getsize(filepath)
+	data["size"] = os.path.getsize(filepath) # size of file as it is now
+		
+	# get the uncompressed and compressed sizes
+	# 
+	if filepath.endswith(".gz"):
+		# gzip stores the original size of the file
+		p = subprocess.Popen(['gzip', '-l', filepath], stdout=subprocess.PIPE)
+		output = p.communicate()[0]
+		output = output.decode("utf-8")
+		
+		# Output example:
+	    # compressed uncompressed  ratio uncompressed_name
+	    #   2913418     23056624  87.3% wise_metadata.txt
+		try:
+			m = re.search('\s([0-9]+)\s+([0-9]+)', str(output).split("\n")[1])
+			data["size_compressed"] = m.groups()[0]
+			data["size_uncompressed"] = m.groups()[1]
+		except Exception as e:
+			logging.warning("Size determination for gzip file failed: '{0}'".format(e))
 
-	filepath = filepath.rstrip(".gz")
+	elif filepath.endswith(".bz2"):
+		# have to do this manually, but thie method doesn't write anything to disk
+		p = subprocess.call(['bzip2', '-l', filepath], stdout=subprocess.PIPE)
+		output = p.communicate()[0]
+		output = output.decode("utf-8")
+		
+		try:
+			data["size_uncompressed"] = int(output) # make sure it's a number
+		except Exception as e:
+			logging.warning("Size calculation for bzip file failed: '{0}'".format(e))
+		
+		data["size_compressed"] = data["size"]
+		
+	elif filepath.split(".")[-1].lower in ["fits", "fts"]:
+		data["size_uncompressed"] = data["size"]
+
+	# filename and path
+	# 
+	#filepath_without_ext = filepath.rstrip(".gz")
 	data["filename"] = os.path.basename(filepath)
 	data["filepath"] = os.path.dirname(filepath)
 	
 	# calculate the sha256 hash for the file
-	with open(filepath) as f:
-		data["sha256"] = hashfile(f)
+	data["sha256"] = sha256hash(filepath)
 	
 	return data
 	

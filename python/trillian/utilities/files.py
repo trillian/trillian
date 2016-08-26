@@ -7,19 +7,42 @@ Created 9 August 2016
 @author: Demitri Muna
 """
 
+import os
+import mmap
 import hashlib
+import subprocess
 
-def hashfile(filepath=None, hasher=hashlib.sha256(), blocksize=1e7):
+def sha256hash(filepath=None):
 	'''
-	Generate a hash for the given file of any size (reads file in blocks). 
-	Uses the sha256 hash algortihm by default.
-	Block size is 1MB by default.
-	NOTE! The file must be opened in mode='rb', otherwise an attempt will
-	      be made to interpret it as utf-8.
+	Generate a sha256 hash for the given file path.
 	'''
-	with open(filepath, mode='rb') as f:
-		buf = file_object.read(blocksize)
-		while len(buf) > 0:
-			hasher.update(buf)
-			buf = file_object.read(blocksize)
-	return hasher.hexdigest()
+	if os.path.exists("/usr/bin/sha256sum"):
+		p = subprocess.Popen(['/usr/bin/sha256sum', filepath], stdout=subprocess.PIPE)
+		output = p.communicate()[0]
+		output = output.decode("utf-8")
+		# output format: <hash> <filename>
+		return output.split()[0]
+		
+	elif os.path.exists("/usr/bin/shasum"):
+		# macOS version
+		# --portable flag "produces same digest on Windows/Unix/Mac"
+		#
+		p = subprocess.Popen(['/usr/bin/shasum', '--portable', '--algorithm', '256', filepath], stdout=subprocess.PIPE)
+		output = p.communicate()[0]
+		output = output.decode("utf-8")
+		# output format: <hash> <filename>
+		return output.split()[0]
+
+	else:
+		# no shell command found - calculate with Python library
+		#
+		hasher = hashlib.sha256()
+		filesize = os.path.getsize(filepath)
+		file = open(filepath, mode="rb")
+		m = mmap.mmap(file.fileno(), length=filesize, prot=mmap.PROT_READ)
+		hasher.update(m)
+		return hasher.hexdigest()
+
+		# alternate method:
+		# with open(filename, mode='rb') as f:
+		#	return hashlib.sha256(f.read()).hexdigest()

@@ -17,6 +17,7 @@ import fnmatch
 import argparse
 import queue
 import os.path
+import logging
 import multiprocessing as mp
 #import threading
 
@@ -105,10 +106,19 @@ if __name__ == "__main__":
 						dest="consumer_count",
 						type=int,
 						default=0)
-	parser.add_arguement("-f", "--file",
-						 help="use input file that contains a list of files to read",
-						 dest="input_file",
-						 default=None)
+	parser.add_argument("-f", "--file",
+						help="use input file that contains a list of files to read",
+						dest="input_file",
+						default=None)
+	parser.add_argument("--regex",
+						help="only process filenames that match this regex pattern",
+						dest="filename_regex",
+						default=None)
+	parser.add_argument("--verbose",
+						help="verbose output",
+						dest="verbose",
+						action="store_true",
+						default=False)
 	
 	# Print help if no arguments are provided
 	if len(sys.argv) < 2:
@@ -117,6 +127,14 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
+	# set up logging
+	#    options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+	#
+	if args.verbose:
+		logging.basicConfig(level=logging.DEBUG)
+	else:
+		logging.basicConfig(level=logging.ERROR)
+		
 	source_dir = args.source_directory
 	output_dir = args.output_directory
 
@@ -187,6 +205,13 @@ if __name__ == "__main__":
 			filepath = os.path.join(source_dir, filename)
 			output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".thdr")
 			if os.path.isfile(output_filepath) == False:
+			
+				if args.filename_regex:
+					m = re.search(args.filename_regex, filepath)
+					if m is None:
+						logging.debug("Skipping filepath that doesn't match regexp: {0}".format(filepath))
+						continue
+				#extract_header(filepath, output_filepath) # use for debugging INSTEAD of next line
 				queue.put((filepath, output_filepath))
 
 	for i in range(n_processes):

@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# Temp files when using Macfusion
+._*
+
 # C extensions
 *.so
 

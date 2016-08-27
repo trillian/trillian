@@ -41,7 +41,7 @@ This is an overview of the available WISE data products:
 * SDSS/WISE forced photometry search: [http://unwise.me/photsearch/](http://unwise.me/photsearch/)
 * See separate notes file.
 
-The All-Sky co-added image and detection catalogs will not be used in Trillian.
+The All-Sky co-added image and detection catalogs will not be used in Trillian. The single epoch All-Sky images will be included in Trillian.
 
 ---
 
@@ -106,6 +106,8 @@ e.g.:
 
 http://unwise.me/data/000/0000m016/unwise-0000m016-w1-img-m.fits
 
+where `[ttt]` is the first three digits of the tile name.
+
 In each directory (e.g. `000/0000m016`) are the following files in each of the four bands (`w1`,`w2`, `w3`, `w4` ).
 
 | Filename                              | Description                              |
@@ -157,13 +159,22 @@ Each top level directory was processed alone by hand due to the sheer number of 
 
 FITS headers extracted at NERSC:
 
-	% for path in `ls -d ~/cosmo/data/unwise/unwise-coadds/[0-9][0-9][0-9]`; do                      
-	> d=`basename $path`
-	> out="/scratch2/scratchdirs/muna/unWISE_headers/$d"
-	> ~/repos/trillian/scripts/fits2header.py --recursive -d $path -o $out --compressed --gzip -p 26
-	> echo "Processed: $out"
-	> done
+```bash
+% for path in `ls -d ~/cosmo/data/unwise/unwise-coadds/[0-9][0-9][0-9]`; do
+> d=`basename $path`
+> out="/scratch2/scratchdirs/muna/unWISE_headers/$d"
+> ~/repos/trillian/scripts/fits2header.py --recursive -d $path -o $out --compressed --gzip -p 26
+> echo "Processed: $out"
+> done
+```
 
+Base directory: `/global/homes/m/muna/cosmo/data/unwise/unwise-coadds/`
+
+Command to generate list of directories and count of FITS files in each (for later verification):
+
+```bash
+for i in `ls -d ???`; do echo $i `find $i -type f -name '*fits*' | lc`; done
+```
 ---
 
 ## Populating the Database
@@ -176,7 +187,7 @@ Navigate to data directory:
 
 Using `tcsh`:
 
-```
+```bash
 % foreach i (*bz2)
 foreach? echo Importing $i ...
 bzip2 -dc $i | sed 's/|$//' | psql --command "COPY dataset_wise.allwise FROM stdin WITH DELIMITER '|' NULL AS '' " 
@@ -190,7 +201,7 @@ This will take many (~10) hours. Next, define the primary key. We will use the [
 
 Index more columns (in the background, as above):
 
-```
+```sql
 CREATE INDEX allwise_sourceid_idx ON dataset_wise.allwise (source_id ASC NULLS LAST);
 CREATE INDEX allwise_w1mpro_idx ON dataset_wise.allwise (w1mpro ASC NULLS LAST);
 CREATE INDEX allwise_w2mpro_idx ON dataset_wise.allwise (w2mpro ASC NULLS LAST);
@@ -200,8 +211,11 @@ CREATE INDEX allwise_w4mpro_idx ON dataset_wise.allwise (w4mpro ASC NULLS LAST);
 
 Index ra, dec coordinates:
 
-```
+```sql
 CREATE INDEX q3c_allwise_idx ON dataset_wise.allwise (q3c_ang2ipix(ra, dec));
 ```
 
-​    
+#### unWISE
+
+All unWISE FITS files read directly from "cosmo" data directory at NERSC.
+

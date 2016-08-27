@@ -118,13 +118,13 @@ def extract_FITS_header(filepath=None, HDU=None):
 	    #   2913418     23056624  87.3% wise_metadata.txt
 		try:
 			m = re.search('\s([0-9]+)\s+([0-9]+)', str(output).split("\n")[1])
-			data["size_compressed"] = m.groups()[0]
-			data["size_uncompressed"] = m.groups()[1]
+			data["size_compressed"] = int(m.groups()[0])
+			data["size_uncompressed"] = int(m.groups()[1])
 		except Exception as e:
 			logging.warning("Size determination for gzip file failed: '{0}'".format(e))
 
 	elif filepath.endswith(".bz2"):
-		# have to do this manually, but thie method doesn't write anything to disk
+		# have to do this manually, but this method doesn't write anything to disk
 		p = subprocess.call(['bzip2', '-l', filepath], stdout=subprocess.PIPE)
 		output = p.communicate()[0]
 		output = output.decode("utf-8")
@@ -132,7 +132,7 @@ def extract_FITS_header(filepath=None, HDU=None):
 		try:
 			data["size_uncompressed"] = int(output) # make sure it's a number
 		except Exception as e:
-			logging.warning("Size calculation for bzip file failed: '{0}'".format(e))
+			logging.warning("Size calculation for bzip2 file failed: '{0}'".format(e))
 		
 		data["size_compressed"] = data["size"]
 		

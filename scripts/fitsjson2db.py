@@ -124,7 +124,8 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	# filepath : full path to file (not including filename)
 	# headers : array of header dictionaries <-- should have been called "HDUs"
 	# size : file size in bytes
-	# sha256 : sha256 has in hex format 
+	# size_uncompressed : size in bytes of uncompressed file (only present if file is compressed)
+	# sha256 : sha256 hash in hex format 
 	#
 	
 	# get relative path object
@@ -155,6 +156,9 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	newFile.datasetRelease = dataset_release
 	newFile.filename = fits_dict["filename"]
 	newFile.size = int(fits_dict["size"])
+	if "size_uncompressed" in fits_dict:
+		newFile.uncompressed_size = int(fits_dict["size_uncompressed"])
+	
 	newFile.directoryPaths.append(relativePath)
 	if 'sha256' in fits_dict:
 		newFile.sha256_hash = fits_dict['sha256']

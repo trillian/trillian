@@ -4,6 +4,8 @@
 ModelClasses file for schema "file".
 '''
 import ast
+import time
+import logging
 
 from ..DatabaseConnection import DatabaseConnection
 from ..AstropyQuantitySQLAlchemyTypes import GigabyteType
@@ -93,20 +95,26 @@ class FitsHeaderValue(Base):
 			return "<{0}: [{1:8} {2}]".format(type(self).__name__, self.keyword.label, self.comment.comment_string)
 		elif self.string_value in ["T", "F"]:
 			if self.comment is not None:
-				return "<{0}: [{1:8} = {2:>20} / {3}]>".format(type(self).__name__, self.keyword.label, self.string_value, self.comment.comment_string)
+				return "<{0}: [{1:8} = {2:>20} / {3}]>".format(type(self).__name__, self.keyword.label,
+															   self.string_value, self.comment.comment_string)
 			else:
-				return "<{0}: [{1:8} = {2:>20}]>".format(type(self).__name__, self.keyword.label, self.string_value)
+				return "<{0}: [{1:8} = {2:>20}]>".format(type(self).__name__, self.keyword.label,
+														 self.string_value)
 		elif self.numeric_value is not None:
 			if self.comment is not None:
-				return "<{0}: [{1:8} = {2:>20} / {3}]>".format(type(self).__name__, self.keyword.label, self.string_value, self.comment.comment_string)
+				return "<{0}: [{1:8} = {2:>20} / {3}]>".format(type(self).__name__, self.keyword.label,
+															   self.string_value, self.comment.comment_string)
 			else:
-				return "<{0}: [{1:8} = {2:>20}]>".format(type(self).__name__, self.keyword.label, self.string_value)
+				return "<{0}: [{1:8} = {2:>20}]>".format(type(self).__name__, self.keyword.label,
+														 self.string_value)
 		else:
 			# value is string
 			if self.comment is not None:
-				return "<{0}: [{1:8} = {2:20} / {3}]>".format(type(self).__name__, self.keyword.label, self.string_value, self.comment.comment_string)
+				return "<{0}: [{1:8} = {2:20} / {3}]>".format(type(self).__name__, self.keyword.label,
+															  self.string_value, self.comment.comment_string)
 			else:
-				return "<{0}: [{1:8} = {2:20}]>".format(type(self).__name__, self.keyword.label, self.string_value)
+				return "<{0}: [{1:8} = {2:20}]>".format(type(self).__name__, self.keyword.label,
+														self.string_value)
 
 class FitsHeaderComment(Base):
 	__tablename__ = 'fits_header_comment'
@@ -261,7 +269,7 @@ class DirectoryPath(Base):
 	__table_args__ = {'autoload' : True, 'schema' : 'files'}
 
 	def __init__(self, path=None):
-		if not isinstance(path, str):
+		if path is not None and not isinstance(path, str):
 			raise Exception("DirectoryPath: expected 'path' to be of string type.")
 		self.path = path
 		
@@ -289,10 +297,11 @@ class DirectoryPath(Base):
 		except sqlalchemy.orm.exc.NoResultFound:
 			if add:
 				# create it here
-				# use a new session in case another running process might be doing the same
+				# use a new session (factory) in case another running process might be doing the same
 				TempSession = scoped_session(sessionmaker(bind=dbc.engine, autocommit=True))
 				tempSession = TempSession()
 				
+				logging.debug("DirectoryPath: About to begin() on tempSession.")
 				tempSession.begin()
 				theDirectoryPath = DirectoryPath()
 				theDirectoryPath.path = path
@@ -306,10 +315,13 @@ class DirectoryPath(Base):
 					# (e.g. in a multiprocessing environment) could have beat us to it.
 					#
 					# Likely error:
-					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "fits_header_comment_uniq"
+					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "directory_path_path_uniq"
 					#
-					pass # since we know the value is there, the next query should succeed.
-
+					# since we know the value is there, the next query should succeed - wait a bit in case the other thread needs time
+					time.sleep(1)
+				
+				TempSession.remove() # close and release scoped_session
+				
 				# now pull it out into the given session
 				theDirectoryPath = session.query(DirectoryPath)\
 										  .join(DirectoryPathType)\

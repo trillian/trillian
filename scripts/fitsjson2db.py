@@ -15,14 +15,11 @@ import sys
 import json
 import gzip
 import os.path
+import logging
 import argparse
+import traceback
 import multiprocessing
 import sqlalchemy
-
-from trillian.database.connections import LocalhostConnection as db
-from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
-from trillian.database.trilliandb.FileModelClasses import *
-from trillian.utilities import memoize
 
 # define caches
 comment_cache = dict()
@@ -31,6 +28,9 @@ paths_cache   = dict()
 path_types_cache = dict()
 
 def getCommentObject(session, comment):
+
+	from trillian.database.trilliandb.FileModelClasses import FitsHeaderComment
+
 	try:
 		commentObject = comment_cache[comment]
 	except KeyError:
@@ -39,6 +39,9 @@ def getCommentObject(session, comment):
 	return commentObject
 
 def getBasePathObject(session=None, base_path=None):
+
+	from trillian.database.trilliandb.FileModelClasses import DirectoryPath
+	
 	# ---------------------------------------------------
 	# Look up base path if provided - must be set by hand
 	# ---------------------------------------------------
@@ -62,11 +65,21 @@ def initialize_process():
 	(not pretty, but it works).
 	Ref: http://stackoverflow.com/questions/10117073/how-to-use-initializer-to-set-up-my-multiprocess-pool
 	'''
-	db.engine.dispose() # force closing of all existing database connections
-	
+	#db.engine.dispose() # force closing of all existing database connections - can't carry them over from parent process
+
+	# Make the first connection to the database in the child process so it's unique to this subprocess.
+	from trillian.database.connections import LocalhostConnection as db
+
 def process_files(file_list):
-	
+	'''
+	The main worker function that imports a list of files (typically a full directory).
+	'''
+	from trillian.database.connections import LocalhostConnection as db
+	from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
+	from trillian.database.trilliandb.FileModelClasses import DirectoryPath, DirectoryPathType, FitsFile
+
 	session = db.Session()
+	logging.debug("process_files: about to begin() new session")
 	session.begin() # one session per directory / process
 	
 	datasetRelease = DatasetRelease.objectFromString(session=session, short_name=args.source)
@@ -114,9 +127,15 @@ def process_files(file_list):
 	db.engine.dispose() # close all database connections
 
 def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset_release=None):
-	''' Takes a dictionary describing a FITS header and adds it to the dictionary. '''
+	'''
+	Takes a dictionary describing a FITS header and adds it to the database.
+	'''
 	if fits_dict is None:
 		raise Exception("The parameter 'fits_dict' is not allowed to be None.")
+	
+	from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
+	from trillian.database.trilliandb.FileModelClasses import DirectoryPath, FitsFile, FitsHDU
+	from trillian.database.trilliandb.FileModelClasses import FitsHeaderKeyword, FitsHeaderValue, FitsHeaderComment
 
 	# format:
 	#
@@ -137,15 +156,8 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	if relative_path_string in paths_cache:
 		relativePath = paths_cache[relative_path_string]
 	else:
-		try:
-			relativePath = session.query(DirectoryPath)\
-								  .filter(DirectoryPath.path==relative_path_string)\
-								  .one()
-		except sqlalchemy.orm.exc.NoResultFound:
-			relativePath = DirectoryPath(path=relative_path_string)
-			relativePath.type = path_types_cache["relative"]
-			session.add(relativePath)
-			paths_cache[relative_path_string] = relativePath
+		relativePath = DirectoryPath.relativePathFromString(session=session, path=relative_path_string, add=True)
+		paths_cache[relative_path_string] = relativePath
 	
 	# create database object
 	#
@@ -202,7 +214,7 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 			
 			# Note: the order these blocks are executed in is important.
 			
-			if keyword in ["COMMENT", "HISTORY"]:
+			if keyword in ["COMMENT", "HISTORY", "CONTINUE"]:
 				newHeaderValue.string_value = value_and_comment.strip()
 				newHeaderValue.comment = getCommentObject(session, value_and_comment.strip())
 				line_parsed = True
@@ -269,6 +281,9 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 				raise Exception("Could not parse the header line: " + "\n\n" + header_line + "\n\n")
 			
 def error_callback(exception):
+	# gets called when the child process raises an Exception
+	# print the full trace (otherwise it gets suppressed)
+	traceback.print_exception(type(exception), exception, exception.__traceback__)
 	print (exception)
 	
 ##############################
@@ -297,6 +312,11 @@ if __name__ == "__main__":
 						action="store_true",
 						default=False,
 						required=False)
+	parser.add_argument("--verbose",
+						help="verbose mode (for debugging)",
+						action="store_true",
+						default=False,
+						required=False)
 
 	# Print help if no arguments are provided
 	if len(sys.argv) < 2:
@@ -305,6 +325,23 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
+	if args.verbose:
+		logging.basicConfig(level=logging.DEBUG)
+	else:
+		logging.basicConfig(level=logging.ERROR)
+
+	# check that base path exists in database
+# 	session = db.Session()
+# 	try:
+# 		base_path = session.query(DirectoryPath)\
+# 						   .join(DirectoryPathType)\
+# 						   .filter(DirectoryPathType.label=='base path')\
+# 						   .filter(DirectoryPath.path==args.base_path)\
+# 						   .one()
+# 	except sqlalchemy.orm.exc.NoResultFound:
+# 		raise Exception("The base path provided was not found in the database.")
+# 	db.engine.dispose()
+	
 	if args.recursive:
 
 		pool = multiprocessing.Pool(processes=35, initializer=initialize_process) # initargs=(queue,)
@@ -328,23 +365,25 @@ if __name__ == "__main__":
 				#print("Adding to pool: {0}".format(root))
 				if len(filepaths) > 0:
 					#pool.apply_async(func=process_files, args=(filepaths,), error_callback=error_callback)
+					
+					#process_files(file_list=filepaths) # use for debugging INSTEAD of next line
 					pool.map_async(func=process_files, iterable=[filepaths], error_callback=error_callback)
 
 		pool.close() # prevents any more tasks from being added
 		pool.join()  # wait for all tasks to finish
 		
 	else:
-   
 		pool = multiprocessing.Pool(processes=35, initializer=initialize_process)
 
 		for dir in args.source_directory:
 			# only select files; recursive more not selected
-			filepaths = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(f)]
+			filepaths = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(os.path.join(dir,f))]
 			if len(filepaths) > 0:
+				#print("Adding to pool: {0}".format(filepaths))
 				pool.map_async(func=process_files, iterable=[filepaths], error_callback=error_callback)
 				
 		pool.close()
 		pool.join()
 
-db.engine.dispose()
+#db.engine.dispose()
 sys.exit(0)

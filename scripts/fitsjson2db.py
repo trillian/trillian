@@ -79,7 +79,9 @@ def process_files(file_list):
 	from trillian.database.trilliandb.FileModelClasses import DirectoryPath, DirectoryPathType, FitsFile
 
 	session = db.Session()
-	logging.debug("process_files: about to begin() new session")
+	#logging.debug("process_files: about to begin() new session")
+	if session.is_active:
+		logging.debug("Session is_active=True immediately begin session.begin().")
 	session.begin() # one session per directory / process
 	
 	datasetRelease = DatasetRelease.objectFromString(session=session, short_name=args.source)
@@ -312,10 +314,10 @@ if __name__ == "__main__":
 						action="store_true",
 						default=False,
 						required=False)
-	parser.add_argument("--verbose",
-						help="verbose mode (for debugging)",
-						action="store_true",
-						default=False,
+	parser.add_argument("--log-level",
+						help="set logging mode (debug, info, warning, error, critical)",
+						choices=["debug", "info", "warning", "error", "critical"],
+						default=None,
 						required=False)
 
 	# Print help if no arguments are provided
@@ -325,9 +327,16 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
-	if args.verbose:
+	logging.basicConfig(level=logging.CRITICAL)
+	if args.log_level is None:
+		logger.propagate = False
+	elif args.log_level == "debug":
 		logging.basicConfig(level=logging.DEBUG)
-	else:
+	elif args.log_level == "info":
+		logging.basicConfig(level=logging.INFO)
+	elif args.log_level == "warning":
+		logging.basicConfig(level=logging.WARNING)
+	elif args.log_level == "error":
 		logging.basicConfig(level=logging.ERROR)
 
 	# check that base path exists in database
@@ -362,7 +371,7 @@ if __name__ == "__main__":
 					# read file containing JSON data
 					filepaths.append(os.path.join(root, filename))
 				
-				#print("Adding to pool: {0}".format(root))
+				logging.info("Adding to pool: {0}".format(root))
 				if len(filepaths) > 0:
 					#pool.apply_async(func=process_files, args=(filepaths,), error_callback=error_callback)
 					

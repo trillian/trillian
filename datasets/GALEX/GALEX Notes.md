@@ -14,7 +14,7 @@ Survey Modes:
 
 Data was released in a series of “General Releases” (GR), as in GR2, GR3, etc.
 
-
+GALEX team: <http://www.galex.caltech.edu/about/team.html>
 
 ## Surveys
 
@@ -122,18 +122,24 @@ Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/kepler/](https://
 
 #### Imaging Data
 
-Location: ???
+Root location: <http://galex.stsci.edu/data/>
+
+GR6: <http://galex.stsci.edu/data/GR6/>
+
+GR7: <http://galex.stsci.edu/data/GR7/>
 
 Pipeline data guide: <http://asd.gsfc.nasa.gov/archive/galex/Documents/ERO_data_description_3.htm>
+
+##### Directory structure
 
 Data from single-orbit visits are stored in a single directory with the format:
 
     <ROOT>/<proc ver>/<tile>/<obs mode>/<product>/<image>/<try>/.
 `proc-ver` : processing version number [`01-vsn`, `02-vsn`]
 
-`tile` : Tile identification string
+`tile` : Tile identification string, e.g. "03000-MISDR1_24278_0266"
 
-`obs-mode` : Instrument observing mode (`d`=direct, `g`=grim, `o`=opaque)
+`obs-mode` : Instrument observing mode (`d`=direct, `g`=grism, `o`=opaque)
 
 `product` : Data product type (single visit, multiple visits)
 

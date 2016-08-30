@@ -2,14 +2,14 @@
 
 ### Overview
 
-The Wide-field Infrared Survey Explorer (WISE) is a NASA infrared satellite.
+The Wide-field Infrared Survey Explorer (WISE) is a NASA infrared satellite, launched December 2009. The on-board hydrogen was depleted in September 2010. The mission was extended as NEOWISE (Near Earth Orbit WISE) to look for asteroids, but only observed in the w1 and w2 bands.
 
 | Band | Wavelength | Angular Resolution |
 | ---- | ---------- | ------------------ |
-| 1    | 3.4 µm     | 6.1"               |
-| 2    | 4.6 µm     | 6.4"               |
-| 3    | 12 µm      | 6.5"               |
-| 4    | 22 µm      | 12.0"              |
+| w1   | 3.4 µm     | 6.1"               |
+| w2   | 4.6 µm     | 6.4"               |
+| w3   | 12 µm      | 6.5"               |
+| w4   | 22 µm      | 12.0"              |
 
 This is an overview of the available WISE data products:
 
@@ -22,6 +22,7 @@ This is an overview of the available WISE data products:
 * Source databse from single exposure images, ~9.4B detections
 * Reject table, 284M low signal to noise detections or image artifacts
 * Data taken from 7 January 2010 to 6 August 2010 (full cryogenic phase)
+* [Explanatory Supplement to the WISE All-Sky Data Release Products](http://wise2.ipac.caltech.edu/docs/release/allsky/expsup/)
 
 #### [WISE AllWISE](http://wise2.ipac.caltech.edu/docs/release/allwise/)
 
@@ -31,9 +32,17 @@ This is an overview of the available WISE data products:
 * Reject table, 484M low signal to noise detections or image artifacts
 * AllWISE supercedes the AllSky release.
 
+#### [NEOWISE](http://neowise.ipac.caltech.edu)
+
+- Mission is to find, track, adn characterize asteroids.
+- Only operates in bands w1, w2.
+- Journal paper: <http://adsabs.harvard.edu/abs/2014ApJ...792...30M>
+- NEOWISE year 1 data released March 26, 2015
+- NEOWISE year 2 data released March 23, 2016.
+
 #### [unWISE](http://unwise.me)
 
-* Unofficial release; co-adds from All-Sky Level 1b single epoch images.
+* Unofficial release; co-adds from All-Sky Level 1b single epoch images (w1-w4).
 * Forum located here: [https://groups.google.com/forum/#!forum/unwise](https://groups.google.com/forum/#!forum/unwise)
 * Forced photmetry code located here: [https://github.com/dstndstn/unwise-sdss-phot](https://github.com/dstndstn/unwise-sdss-phot)
 * Image search / cutouts: [http://unwise.me/imgsearch/](http://unwise.me/imgsearch/)
@@ -41,7 +50,20 @@ This is an overview of the available WISE data products:
 * SDSS/WISE forced photometry search: [http://unwise.me/photsearch/](http://unwise.me/photsearch/)
 * See separate notes file.
 
-The All-Sky co-added image and detection catalogs will not be used in Trillian. The single epoch All-Sky images will be included in Trillian.
+#### [unWISE-NEO1](http://unwise.me/data/neo1/000)
+
+* Unofficial release, co-adds from Dustin Lang/Aaron Meisner that uses the first year of NEOWISE data.
+* Only have w1, w2 (those are theonly channels available in the reactivation phase).
+* Direct file access: <http://unwise.me/data/neo1>
+
+
+
+#### Datasets included in Trillian
+
+* All-Sky single epoch images.
+* unWISE co-adds for w3-w4.
+* unWISE-NEO1 co-adds for w1-w2.
+* AllWISE source catalog.
 
 ---
 
@@ -213,6 +235,17 @@ Index ra, dec coordinates:
 
 ```sql
 CREATE INDEX q3c_allwise_idx ON dataset_wise.allwise (q3c_ang2ipix(ra, dec));
+```
+
+#### AllSky Single Epoch Images
+
+The wrong base path was used. This is the base path used to create the files: `/global/homes/m/muna/cosmo/data/wise/allsky/4band_p1bm_frm/`, so it should be used in the import. After the import is complete, it should be changed to  `/project/projectdirs/cosmo/data/wise/allsky/4band_p1bm_frm`.
+
+Import command:
+
+```bash
+% cd ~/trillian_data/datasets/WISE/allsky/4band_p1bm_frm
+% ~/trillian_repo/scripts/fitsjson2db.py --recursive -d . -b /global/homes/m/muna/cosmo/data/wise/allsky/4band_p1bm_frm --source wise_allsky_single_epoch
 ```
 
 #### unWISE

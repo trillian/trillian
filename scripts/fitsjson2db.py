@@ -155,12 +155,12 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 	if relative_path_string.endswith("/"):
 		relative_path_string = relative_path_string[0:-1]
 		
-	if relative_path_string in paths_cache:
+	try:
 		relativePath = paths_cache[relative_path_string]
-	else:
+	except KeyError:
 		relativePath = DirectoryPath.relativePathFromString(session=session, path=relative_path_string, add=True)
 		paths_cache[relative_path_string] = relativePath
-	
+		
 	# create database object
 	#
 	newFile = FitsFile()
@@ -329,7 +329,7 @@ if __name__ == "__main__":
 
 	logging.basicConfig(level=logging.CRITICAL)
 	if args.log_level is None:
-		logger.propagate = False
+		logging.propagate = False
 	elif args.log_level == "debug":
 		logging.basicConfig(level=logging.DEBUG)
 	elif args.log_level == "info":
@@ -391,8 +391,8 @@ if __name__ == "__main__":
 				#print("Adding to pool: {0}".format(filepaths))
 				pool.map_async(func=process_files, iterable=[filepaths], error_callback=error_callback)
 				
-		pool.close()
-		pool.join()
+		pool.close() # indicate that no more work will be added
+		pool.join()  # wait for all processes to complete
 
 #db.engine.dispose()
 sys.exit(0)

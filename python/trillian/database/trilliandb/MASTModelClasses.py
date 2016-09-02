@@ -4,6 +4,7 @@
 ModelClasses file for schema "mast".
 '''
 import sqlalchemy
+from sqlalchemy.orm import relationship
 
 from ..DatabaseConnection import DatabaseConnection
 
@@ -16,6 +17,7 @@ dbc = DatabaseConnection()
 Base = dbc.Base
 
 class CaomArtifact(Base):
+	''' Table of data files. '''
 	__tablename__ = 'caom_artifact'
 	__table_args__ = {'autoload' : True, 'schema' : 'mast'}
 
@@ -63,7 +65,7 @@ class MASTUCD(Base):
 # Define relationships here
 # =========================
 #
-# none yet
+CaomArtifact.plane = relationship(CaomPlane, backref="artifact")
 
 # ---------------------------------------------------------
 # Test that all relations/mappings are self-consistent.

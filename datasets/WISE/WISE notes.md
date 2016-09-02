@@ -195,7 +195,7 @@ Base directory: `/global/homes/m/muna/cosmo/data/unwise/unwise-coadds/`
 Command to generate list of directories and count of FITS files in each (for later verification):
 
 ```bash
-for i in `ls -d ???`; do echo $i `find $i -type f -name '*fits*' | lc`; done
+for i in `ls -d ???`; do echo $i `find $i -type f -name '*fits*' | grep -v md5 | lc`; done
 ```
 ---
 

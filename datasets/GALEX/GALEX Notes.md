@@ -12,7 +12,7 @@ Survey Modes:
 * direct imaging - all-sky survey covered 2/3 of the sky
 * spectroscopic (grism)
 
-Data was released in a series of “General Releases” (GR), as in GR2, GR3, etc.
+Data was released in a series of “General Releases” (GR), as in GR2, GR3, etc. GR6/GR7 are the combined final release that supercede all previous releases. The release is "joint" as GR7 is a reprocessing of some of the data, but not all of GR6. [TODO: determine the exact delination here.]
 
 GALEX team: <http://www.galex.caltech.edu/about/team.html>
 
@@ -51,6 +51,8 @@ Link to details of each survey: [http://www.galex.caltech.edu/researcher/techdoc
 Number of tiles: 34,285.
 
 Link to list all tiles (database form): [http://galex.stsci.edu/GR6/?page=tilelist&survey=ais&showall=Y](http://galex.stsci.edu/GR6/?page=tilelist&survey=ais&showall=Y)
+
+TODO: Get a complete list of tiles.
 
 #### Nearby Galaxy Survey (NGS)
 
@@ -93,6 +95,8 @@ These source catalogs:
 Description of the GASC and GMSC catalogs: [https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html](https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html)
 
 Catalog search web interface: http://galex.stsci.edu/GR6/?page=mastform
+
+
 
 #### GALEX All-Sky Survey Source Catalog (GASC)
 

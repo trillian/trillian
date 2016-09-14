@@ -245,7 +245,7 @@ Import command:
 
 ```bash
 % cd ~/trillian_data/datasets/WISE/allsky/4band_p1bm_frm
-% ~/trillian_repo/scripts/fitsjson2db.py --recursive -d . -b /global/homes/m/muna/cosmo/data/wise/allsky/4band_p1bm_frm --source wise_allsky_single_epoch
+% ~/trillian_repo/scripts/fitsjson2db.py --recursive -d . --base-path /global/homes/m/muna/cosmo/data/wise/allsky/4band_p1bm_frm --source wise_allsky_single_epoch
 ```
 
 #### unWISE

@@ -1,0 +1,16 @@
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-000.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-001.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-002.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-003.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-004.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-005.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-006.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-007.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-008.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-009.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-010.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-011.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-012.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-013.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-014.csv.gz
+http://cdn.gea.esac.esa.int/Gaia/tgas_source/csv/TgasSource_000-000-015.csv.gz

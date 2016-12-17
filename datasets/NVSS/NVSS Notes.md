@@ -8,6 +8,8 @@ Catalog: <ftp://nvss.cv.nrao.edu/pub/nvss/CATALOG>
 
 Catalog description: <http://www.cv.nrao.edu/nvss/catalog.ps>
 
+Access by anonymous ftp: http://www.cv.nrao.edu/nvss/anonftp.shtml
+
 ### Images
 
 Individual images: <ftp://nvss.cv.nrao.edu/pub/nvss/NVSSSnapshots>

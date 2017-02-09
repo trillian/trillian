@@ -56,7 +56,7 @@ The Trillian project is being developed at the [Center for Cosmology and Astropa
 
 The first milestone is to provide an arbitrarily simple model to Trillian, have the framework apply that model to all objects available, and return a likelihood value for each one. Current tasks include:
 
-- Gather and index the metadata from as many astronomical data sets as possible.
+- Gather and index the metadata from as many astronomical data sets as possible (50TB indexed and counting!).
 - Initialize the server with the coarsest resolution of HEALPix regions/trixels.
 - Define the structure of each trixel (the storage on disk representation of each HEALPix region). This will include a schema for each data set (e.g. SDSS, WISE, etc.) in a shared database on each node, indexing of image data, etc.
 - Define an API for accessing data between nodes.

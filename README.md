@@ -28,7 +28,7 @@ Mailing list: [https://groups.google.com/forum/#!forum/trillianverse](https://gr
 
 Trillian is a project to create a next-generation astronomical archive, allowing astronomers to analyze hundreds of terabytes of data (or more!) as easily as they would dozens of files on their own hard drive.
 
-##### The Problem.
+#### The Problem.
 
 Astronomy has generated *a lot* of freely available, public data. The recent [Pan-STARRS data release](http://panstarrs.stsci.edu) alone is 2PB in size, and that's just one telescope. The data is available through a number of archives around the world such as the [Space Telescope Science Institute](http://archive.stsci.edu),  [IPAC](http://ipac.caltech.edu), or [SDSS](https://dr13.sdss.org). There is no single, central repository of data. These archives are organized by the funding bodies for the telescopes or satellites, e.g. NASA or hosted by the individual surveys. Typically, this means that optical data will be in one archive, radio in another, infrared yet another, etc. This makes sense from an organizational of funding point of view, but it makes life difficult for the individual astronomer.
 
@@ -36,7 +36,7 @@ When an astronomer wants to study a particular set of objects, ideally she wants
 
 This manual process doesn’t scale to large data sets. The individual astronomer has limited time to visit all of the archives (assuming she is aware of all of them) so she uses the ones she's most familiar with, potentially leaving data on the table. She may be able to download data for hundreds or even thousands of objects, but not millions from several archives. She has limited disk space to download data (so, for that matter, does her department or whole university!). It's impossible to perform an analysis across many different observed wavelengths across the whole sky.
 
-##### The Solution.
+#### The Solution.
 
 Trillian is a framework that aims to solve these problems. First, it is an archive that will organize astronomical data by position on the sky, not by wavelength. Even if you can programatically access all of the data needed remotely, you will spend more of your time waiting to download it.
 

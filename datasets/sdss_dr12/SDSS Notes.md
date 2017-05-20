@@ -6,10 +6,33 @@ These are the notes and directions for populating the SDSS data. This is compris
 
 #### File Organization
 
+###### DR14
+
+* No changes to photometry since DR13
+
+* Pipeline version: ```v5_10_0```
+
+* Spectra in individual files:
+
+    ```sh
+    module switch tree tree/dr14
+    cd $BOSS_SPECTRO_REDUX/v5_10_0/spectra/lite
+    pwd -P
+    /uufs/chpc.utah.edu/common/home/sdss02/dr14/eboss/spectro/redux/v5_10_0/spectra/lite
+    ```
+
+*  Top level DR14: <[http://data.sdss.org/sas/dr14](http://data.sdss.org/sas/dr14)>
+
+* All releases: ```/uufs/chpc.utah.edu/common/home/sdss/```
+
+
+
 ###### DR13
 
 The root location of the DR13 flat files is here:
 <https://data.sdss.org/sas/dr13/>
+
+The data model is located here: <https://data.sdss.org/datamodel/>
 
 ###### DR12
 
@@ -28,14 +51,42 @@ There are three scripts to populate the database. The execution order is very im
  2. `photoField2db.py`
  3. `photoObj2db.py`
 
+### Data Size
+
+Links:
+
+**[DR13]** Data Volume Table: <http://www.sdss.org/dr13/data_access/volume/>
+
+#### DR13
+
+| Data                                   | Location                                 | Env                  | Size     | Dir Count | File Count |
+| -------------------------------------- | ---------------------------------------- | -------------------- | -------- | --------- | ---------- |
+| Complete photometric catalog (imaging) | [eboss/photoObj/301](https://data.sdss.org/sas/dr13/eboss/photoObj/301/) |                      | 3.40 TB  | 5,355     | 944,167    |
+| 2d & 1d BOSS spectra (reduced)         | [eboss/spectro/redux](https://data.sdss.org/sas/dr13/eboss/spectro/redux/) | $ BOSS_SPECTRO_REDUX | 10.80 TB | 12,762    | 10,905,339 |
+|                                        |                                          |                      |          |           |            |
+|                                        |                                          |                      |          |           |            |
+|                                        |                                          |                      |          |           |            |
+
+| Data                          | Location            | Size     |
+| ----------------------------- | ------------------- | -------- |
+|                               | $BOSS_SPECTRO_REDUX | 11 TB    |
+| DR 12 Imaging (gzipped files) |                     | 18.81 TB |
+|                               |                     |          |
+|                               |                     |          |
+|                               |                     |          |
+
+
+
 ### Imaging Data
 
 The root location of the imaging data is here:
-<http://data.sdss3.org/sas/dr12/boss/photoObj/frames/301/>
+**[DR12]** : <http://data.sdss3.org/sas/dr12/boss/photoObj/frames/301/>
+
+**[DR13]** : https://data.sdss.org/sas/dr13/eboss/photoObj/
 
 There is a directory for each plate (named by plate ID). Within each plate directory is a directory for each camcol (1-6), and a `frames-run*.html` page that provides thumbnails for the plate (plus a checksum file). Within each camcol directory are the [frame](http://data.sdss3.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html) files (imaging products) over *ugriz*.
 
-Total size of gzipped imaging (`frame-*`) files: 18.81 TB (18813743111741 bytes)
+Total size of gzipped imaging (`frame-*`) files: **[DR12]** 18.81 TB (18813743111741 bytes)
 
 ##### FITS Header Extraction
 

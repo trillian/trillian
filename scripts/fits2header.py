@@ -23,7 +23,7 @@ import multiprocessing as mp
 
 from trillian.utilities import extract_FITS_header
 
-def is_fits_file(filepath, read_compressed=False):
+def is_fits_file(filename, read_compressed=False):
 	'''
 	Check if this is a FITS file. Not robust - only checks for extension.
 	'''
@@ -32,7 +32,7 @@ def is_fits_file(filepath, read_compressed=False):
 	if read_compressed:
 		allowed_suffixes = allowed_suffixes + [r'\.fits.gz$', r'\.fts.gz$', r'\.fits.bz2$', r'\.fts.bz2$']
 
-	return any([re.search(suffix, filepath, re.IGNORECASE) for suffix in allowed_suffixes])
+	return any([re.search(suffix, filename, re.IGNORECASE) for suffix in allowed_suffixes])
 	
 def worker_main(queue):
 	done = False
@@ -106,9 +106,14 @@ if __name__ == "__main__":
 						dest="consumer_count",
 						type=int,
 						default=0)
-	parser.add_argument("-f", "--file",
-						help="use input file that contains a list of files to read",
-						dest="input_file",
+	parser.add_argument("-i", "--input_list",
+						help="use input file that contains a list of files to read (local or URL)",
+						dest="input_list",
+						default=None)
+	parser.add_argument("-f", "--files",
+						help="only process files specified on command line",
+						dest="files",
+						nargs="+",
 						default=None)
 	parser.add_argument("--regex",
 						help="only process filenames that match this regex pattern",
@@ -138,6 +143,32 @@ if __name__ == "__main__":
 	source_dir = args.source_directory
 	output_dir = args.output_directory
 
+	# ----------------------------------
+	# get processor count & set up queue
+	# ----------------------------------
+	if args.consumer_count == 0: #  0 = number of cores available
+		n_processes = os.cpu_count()
+		if n_processes == None: # can't determine number of cores
+			n_processes = 1
+	elif args.consumer_count < 1:
+		print("An invalid number of processes was specified ({0}).".format(args.consumer_count))
+	else:
+		n_processes = args.consumer_count
+
+	queue = mp.Queue(maxsize=10)
+	#n_processes = args.consumer_count
+	pool = mp.Pool(processes=n_processes, initializer=worker_main, initargs=(queue,))
+	
+	file_count = 0
+	# ----------------------------------
+
+	if args.files:
+		# only process the files provided on the command line
+		for filepath in args.files:
+			(path, filename) = os.path.split(filepath)
+			output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".thdr")
+			queue.put((filepath, output_filepath))
+
 # 	if args.input_file:
 # 		# Read from the files listed in given file.
 # 		# If the path starts with a "/", read it as a full path,
@@ -155,25 +186,8 @@ if __name__ == "__main__":
 # 				
 # 				if os.path.isfile(output_filepath) == False:
 # 					queue.put((filepath, output_filepath))
-
-	# get processor count
-	#
-	if args.consumer_count == 0: #  0 = number of cores available
-		n_processes = os.cpu_count()
-		if n_processes == None: # can't determine number of cores
-			n_processes = 1
-	elif args.consumer_count < 1:
-		print("An invalid number of processes was specified ({0}).".format(args.consumer_count))
-	else:
-		n_processes = args.consumer_count
-
-	queue = mp.Queue(maxsize=10)
-	#n_processes = args.consumer_count
-	pool = mp.Pool(processes=n_processes, initializer=worker_main, initargs=(queue,))
 	
-	file_count = 0
-	
-	if args.recursive:
+	elif args.recursive:
 		for root, subdirs, files in os.walk(source_dir):
 			# root: current path
 			# subdirs: list of directories in current path

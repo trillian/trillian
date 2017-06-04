@@ -19,6 +19,9 @@ import fitsio
 
 from .files import sha256hash
 
+# bitpix values -> bitpix:bytes
+bitpix2byteSize = {8:1, 16:2, 32:4, 64:8, -32:4, -64:8}
+
 def is_fits_file(filepath, read_compressed=False, robust_check=False):
 	'''
 	Check if this is a FITS file from the extension (by default).
@@ -83,19 +86,48 @@ def extract_FITS_header(filepath=None, HDU=None):
 		header_data = dict() # dictionary of all header data
 
 		# read header
+		# -----------
 		header = hdu.read_header() # -> fitsio.FITSHDR
 		cards = list()
 		for record in header.records():
 			cards.append(record["card_string"]) # only read the "raw" header line
 		header_data["header"] = cards
 		
-		header_data["hdu"] = i+1
+		header_data["hdu_number"] = i+1
 		
 		# read byte offsets
+		# -----------------
+		# data_end includes the zero padding
+		# data_end includes the next byte, e.g. reading [0:data_end]
+		#   includes one more byte than needed. This means that data_end
+		#   for one HDU is the same value as hdu_start for the next HDU.
+		#   Subtract 1 to correct.
 		info = hdu.get_info()
-		header_data["header_start"] = info["header_start"]
-		header_data["data_start"] = info["data_start"]
-		header_data["data_end"] = info["data_end"]
+		header_data["hdu_start"] = info["header_start"]
+		header_data["hdu_end"] = info["data_end"] - 1
+		
+		# calculate data length
+		# ---------------------
+		pcount = header.get('PCOUNT', 0) # default values that do not affect data length
+		gcount = header.get('GCOUNT', 1)
+		
+		naxis = header['NAXIS']
+		axes = list()
+		for i in range(naxis):
+			axes.append(header['NAXIS'+str(i+1)])
+		if len(axes) == 0:
+			data_length = 0
+		else:
+			naxes_product = axes[0]
+			for axis in axes[1:]:
+				naxes_product = axis * naxes_product
+			naxes_product = naxes_product + pcount
+			bitpix = header['BITPIX']
+			data_length = naxes_product * bitpix2byteSize[bitpix] * gcount
+		
+		header_data["data_length"] = data_length
+		if data_length > 0:
+			header_data["data_start"] = info["data_start"]
 		
 		headers.append(header_data)
 	

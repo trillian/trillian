@@ -21,9 +21,15 @@ These are the notes and directions for populating the SDSS data. This is compris
     /uufs/chpc.utah.edu/common/home/sdss02/dr14/eboss/spectro/redux/v5_10_0/spectra/lite
     ```
 
-*  Top level DR14: <[http://data.sdss.org/sas/dr14](http://data.sdss.org/sas/dr14)>
+* Top level DR14: <[http://data.sdss.org/sas/dr14](http://data.sdss.org/sas/dr14)>
 
 * All releases: ```/uufs/chpc.utah.edu/common/home/sdss/```
+
+* Pre-release documentation:
+
+    * [http://testng.sdss.org/dr14/](http://testng.sdss.org/dr14/)
+    * [http://testng.sdss.org/dr14/spectro/spectro_access/](http://testng.sdss.org/dr14/spectro/spectro_access/)
+    * Data models: [https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/](https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/)
 
 
 

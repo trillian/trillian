@@ -36,6 +36,8 @@ def sha256hash(filepath=None):
 	else:
 		# no shell command found - calculate with Python library
 		#
+		# TODO: this does not produce the same output as /usr/bin/shasum on macOS
+		#
 		hasher = hashlib.sha256()
 		filesize = os.path.getsize(filepath)
 		file = open(filepath, mode="rb")

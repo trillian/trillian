@@ -30,6 +30,9 @@ These are the notes and directions for populating the SDSS data. This is compris
     * [http://testng.sdss.org/dr14/](http://testng.sdss.org/dr14/)
     * [http://testng.sdss.org/dr14/spectro/spectro_access/](http://testng.sdss.org/dr14/spectro/spectro_access/)
     * Data models: [https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/](https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/)
+    * spPlate data model: <https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/PLATE4/spec.html>
+
+
 
 
 

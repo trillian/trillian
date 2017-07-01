@@ -3,6 +3,7 @@
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 from ..DatabaseConnection import DatabaseConnection
+from ..pgutils import read_password_from_pgpass
 
 # ---------------------------------------------------------------------
 # Fill in database connection information here.
@@ -11,7 +12,7 @@ from ..DatabaseConnection import DatabaseConnection
 # ---------------------------------------------------------------------
 db_config = {
 	'user'     : 'trillian_admin',  # specify the database username
-	'password' : '',     			# the database password for that user
+	'password' : None,     			# the database password for that user -> '' is no password, None is not specified
 	'database' : 'trilliandb',		# the name of the database
 	'host'     : 'localhost',		# your hostname, "localhost" if on your own machine
 	'port'     : 42420				# default port is 5432
@@ -26,26 +27,8 @@ db_config = {
 # Asterisks in the .pgpass file are supported, but recommend to be more
 # specific, not less.
 #
-from os.path import expanduser
-line_no = 0
-with open(expanduser("~/.pgpass")) as pgpass:
-	line_no = line_no + 1
-	for line in pgpass:
-		# skip comments	
-		if line.startswith("#"):
-			continue
-		elif not len(line) > 2:
-			continue
-		else:
-			line = line.rstrip("\n")
-			
-		try:
-			(host, port, database, user, password) = line.split(":")
-			if user in [user, '*'] and database in [database, '*'] and host in [host, '*'] and port in [port, '*']:
-				db_config["password"] = password
-				break
-		except ValueError:
-			raise Exception("An incorrectly formatted line was found in '~/.pgpass (line {0}).".format(line_no))
+if db_config["password"] is None:
+	db_config["password"] = read_password_from_pgpass(host=db_config["host"], port=db_config["port"], user=db_config["user"], database=db_config["database"])
 
 # If password is still empty by here, that must be what the user intended.
 

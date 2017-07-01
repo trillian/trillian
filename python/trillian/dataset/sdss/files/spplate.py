@@ -23,12 +23,9 @@ class SPPlate(object):
 		self._or_mask_image = None
 		self._wavelength_dispersion_image = None
 		self._sky_flux_image = None
-		
-		# hardcoded for the moment
-		self.spAll_filepath = "/Users/demitri/Documents/Data/SDSS/v5_10_0/spAll-v5_10_0.fits"
-	
+			
 	@property
-	self fiber_count(self):
+	def fiber_count(self):
 		'''
 		Returns the number of fibers in this file.
 		
@@ -61,8 +58,6 @@ class SPPlate(object):
 		except KeyError:
 			self._headers[hdu] = fitsio.read_header(filename=self.filepath, ext=hdu-1)
 		return self._headers[hdu]
-	
-	def
 	
 	@property
 	def reduction_2d_version(self):
@@ -123,7 +118,7 @@ class SPPlate(object):
 		else:
 			return self._flux_image[fiber-1]
 	
-	def inverse_variance(self, fiber=None)
+	def inverse_variance(self, fiber=None):
 		'''
 		Returns the inverse variance for a given fiber ID (1-based).
 		
@@ -144,7 +139,7 @@ class SPPlate(object):
 		else:
 			return self._inverse_variance_image[fiber-1]
 
-	def and_mask(self, fiber=None)
+	def and_mask(self, fiber=None):
 		'''
 		Returns the AND mask for a given fiber ID (1-based).
 		
@@ -166,7 +161,7 @@ class SPPlate(object):
 			return self._and_mask_image[fiber-1]
 
 
-	def or_mask(self, fiber=None)
+	def or_mask(self, fiber=None):
 		'''
 		Returns the OR mask for a given fiber ID (1-based).
 		
@@ -187,7 +182,7 @@ class SPPlate(object):
 		else:
 			return self._or_mask_image[fiber-1]
 	
-	def wavelength_dispersion(self, fiber=None)
+	def wavelength_dispersion(self, fiber=None):
 		'''
 		Returns the wavelength dispersion for a given fiber ID (1-based).
 		
@@ -208,7 +203,7 @@ class SPPlate(object):
 		else:
 			return self._wavelength_dispersion_image[fiber-1]
 
-	def sky_flux_image(self, fiber=None)
+	def sky_flux_image(self, fiber=None):
 		'''
 		Returns the sky flux for a given fiber ID (1-based).
 		
@@ -240,10 +235,11 @@ class SPPlate(object):
 			raise Exception("An invalid fiber value was given.")
 		
 		# read all values as a block
-		if self._spAll is None:
-			with FITS(self.filepath) as hduList:
-				self._spAll = hduList[
+		#if self._spAll is None:
+		#	with FITS(self.filepath) as hduList:
+		#		self._spAll = hduList[
 
+		# INCOMPLETE
 
 
 

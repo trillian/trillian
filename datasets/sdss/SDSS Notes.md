@@ -56,7 +56,7 @@ Each directory is a plate ID. Within each plate directory is a directory for eac
 
 There are three scripts to populate the database. The execution order is very important as each successive script creates objects that expects to reference the fields created before it.
 
- 1. `photoRun2db.py`
+ 1. `photoRun2db.py`  - use the `photoRunAll-dr14.fits` file instead of the individual files (which have one line each)
  2. `photoField2db.py`
  3. `photoObj2db.py`
 

@@ -3,7 +3,7 @@
 __author__ = "Demitri Muna"
 
 '''
-Utlitiy functions for working with PostgreSQL databases.
+Utility functions for working with PostgreSQL databases.
 '''
 
 from os.path import expanduser

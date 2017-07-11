@@ -4,7 +4,7 @@ CREATE TABLE dataset_twomass.psc (
     err_maj numeric,
     err_min numeric,
     err_ang smallint,
-    designation character(17),
+    designation text,
     j_m numeric,
     j_cmsig numeric,
     j_msigcom numeric,

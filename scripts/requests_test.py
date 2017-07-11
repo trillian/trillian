@@ -31,6 +31,7 @@ with requests.Session() as session:
 	# session.get(url, headers=headers)
 	
 	# send data via POST:
+    # if "data" is a dict->URL form encoded, string->left alone (e.g. JSON)
 	# session.post(url, data=dataDict) # e.g. {"key":"value", "key2":"value2"}, can also be a string
 	
 	# json support - will encode dictionary to JSON
@@ -47,6 +48,10 @@ with requests.Session() as session:
 	# resp.content # <-- binary data
 	# resp.json()  # if response is json, will be decoded, no JSON raises ValueError
 
+	# GET with URL parameters
+	parameters = {"key1":"value1", "key2":"value2"}
+	resp = session.get(url="http://localhost/index.html", params=parameters)
+	
 	# get another range
 	session.headers.update({"Range":"bytes={0}-{1}".format(50,60)})
 	resp = session.get(url="http://localhost/index.html")

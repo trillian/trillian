@@ -21,9 +21,18 @@ These are the notes and directions for populating the SDSS data. This is compris
     /uufs/chpc.utah.edu/common/home/sdss02/dr14/eboss/spectro/redux/v5_10_0/spectra/lite
     ```
 
-*  Top level DR14: <[http://data.sdss.org/sas/dr14](http://data.sdss.org/sas/dr14)>
+* Top level DR14: <[http://data.sdss.org/sas/dr14](http://data.sdss.org/sas/dr14)>
 
 * All releases: ```/uufs/chpc.utah.edu/common/home/sdss/```
+
+* Pre-release documentation:
+
+    * [http://testng.sdss.org/dr14/](http://testng.sdss.org/dr14/)
+    * [http://testng.sdss.org/dr14/spectro/spectro_access/](http://testng.sdss.org/dr14/spectro/spectro_access/)
+    * Data models: [https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/](https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/)
+    * spPlate data model: <https://internal.sdss.org/dr14/datamodel/files/BOSS_SPECTRO_REDUX/RUN2D/spectra/PLATE4/spec.html>
+
+
 
 
 
@@ -47,7 +56,7 @@ Each directory is a plate ID. Within each plate directory is a directory for eac
 
 There are three scripts to populate the database. The execution order is very important as each successive script creates objects that expects to reference the fields created before it.
 
- 1. `photoRun2db.py`
+ 1. `photoRun2db.py`  - use the `photoRunAll-dr14.fits` file instead of the individual files (which have one line each)
  2. `photoField2db.py`
  3. `photoObj2db.py`
 

@@ -19,20 +19,22 @@ import queue
 import os.path
 import logging
 import multiprocessing as mp
+from urllib.parse import urlparse
 #import threading
 
-from trillian.utilities import extract_FITS_header
+from trillian.utilities.files.fits import fitsmd_from_file, is_fits_file
 
-def is_fits_file(filename, read_compressed=False):
-	'''
-	Check if this is a FITS file. Not robust - only checks for extension.
-	'''
-	allowed_suffixes = [r'\.fits$', r'\.fts$']
-	
-	if read_compressed:
-		allowed_suffixes = allowed_suffixes + [r'\.fits.gz$', r'\.fts.gz$', r'\.fits.bz2$', r'\.fts.bz2$']
-
-	return any([re.search(suffix, filename, re.IGNORECASE) for suffix in allowed_suffixes])
+# replaced with trillian.files.fits
+# def is_fits_file(filename, read_compressed=False):
+# 	'''
+# 	Check if this is a FITS file. Not robust - only checks for extension.
+# 	'''
+# 	allowed_suffixes = [r'\.fits$', r'\.fts$']
+# 	
+# 	if read_compressed:
+# 		allowed_suffixes = allowed_suffixes + [r'\.fits.gz$', r'\.fts.gz$', r'\.fits.bz2$', r'\.fts.bz2$']
+# 
+# 	return any([re.search(suffix, filename, re.IGNORECASE) for suffix in allowed_suffixes])
 	
 def worker_main(queue):
 	done = False
@@ -47,17 +49,17 @@ def extract_header(filepath, output_filepath):
 	'''
 	Read FITS file at "filepath", extract header and write JSON file to "output_filepath".
 	'''
-	d = extract_FITS_header(filepath)
+	metadata = fitsmd_from_file(filepath) # in JSON format
 	
 	# create directories if needed
 	os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
 	
 	if (args.gzip_output):
 		with gzip.open(output_filepath+".gz", "wb") as out:
-			out.write(bytes(json.dumps(d), 'UTF-8'))
+			out.write(bytes(metadata, 'UTF-8'))
 	else:
 		with open(output_filepath, 'w') as out:
-			out.write(json.dumps(d))
+			out.write(metadata)
 
 def producer(files):
 	for filename in files:
@@ -66,7 +68,7 @@ def producer(files):
 
 		#print("Adding file to queue: {0}".format(os.path.basename(filename)))
 		filepath = os.path.join(root, filename)
-		output_filepath = os.path.join(output_dir, relative_directory, filename.rstrip(".gz")+".thdr")
+		output_filepath = os.path.join(output_dir, relative_directory, filename.rstrip(".gz")+".fitsmd")
 		queue.put((filepath, output_filepath))
 		if args.limit:
 			file_count = file_count + 1
@@ -75,7 +77,7 @@ def producer(files):
 
 if __name__ == "__main__":
 
-	parser = argparse.ArgumentParser(description="A script to extract headers from FITS files.")
+	parser = argparse.ArgumentParser(description="A script to create a FITS metadata file (.fitsmd) from a FITS file. Accepts local files or files on a web server.")
 	parser.add_argument("-d", "--directory",
 						help="root directory to search for FITS files",
 						dest="source_directory",
@@ -164,10 +166,16 @@ if __name__ == "__main__":
 
 	if args.files:
 		# only process the files provided on the command line
-		for filepath in args.files:
-			(path, filename) = os.path.split(filepath)
-			output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".thdr")
-			queue.put((filepath, output_filepath))
+		for resource in args.files:
+			if resource.startswith("http:"):
+				u = urlparse(resource)
+				filename = os.path.basename(u.path)
+				output_filepath = os.path.join(output_dir, filename+".fitsmd")
+			else:
+				# treat as local file
+				(path, filename) = os.path.split(resource)
+				output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".fitsmd")
+			queue.put((resource, output_filepath))
 
 # 	if args.input_file:
 # 		# Read from the files listed in given file.
@@ -202,7 +210,7 @@ if __name__ == "__main__":
 			
 				#print("Adding file to queue: {0}".format(os.path.basename(filename)))
 				filepath = os.path.join(root, filename)
-				output_filepath = os.path.join(output_dir, relative_directory, filename.rstrip(".gz")+".thdr")
+				output_filepath = os.path.join(output_dir, relative_directory, filename.rstrip(".gz")+".fitsmd")
 				if os.path.isfile(output_filepath) == False:
 					queue.put((filepath, output_filepath))
 			
@@ -217,7 +225,7 @@ if __name__ == "__main__":
 				continue
 			
 			filepath = os.path.join(source_dir, filename)
-			output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".thdr")
+			output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".fitsmd")
 			if os.path.isfile(output_filepath) == False:
 			
 				if args.filename_regex:

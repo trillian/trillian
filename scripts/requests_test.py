@@ -31,6 +31,7 @@ with requests.Session() as session:
 	# session.get(url, headers=headers)
 	
 	# send data via POST:
+    # if "data" is a dict->URL form encoded, string->left alone (e.g. JSON)
 	# session.post(url, data=dataDict) # e.g. {"key":"value", "key2":"value2"}, can also be a string
 	
 	# json support - will encode dictionary to JSON

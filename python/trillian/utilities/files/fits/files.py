@@ -10,6 +10,7 @@ Created 2 May 2016
 import re
 import os
 import bz2
+import json
 import gzip
 import pathlib # Python 3.4+
 import subprocess
@@ -17,25 +18,26 @@ import logging
 
 import fitsio
 
-from .files import sha256hash
+from ..files import sha256hash
+from .remote import FITSMetadataRemoteReader
 
 # bitpix values -> bitpix:bytes
 bitpix2byteSize = {8:1, 16:2, 32:4, 64:8, -32:4, -64:8}
 
-def is_fits_file(filepath, read_compressed=False, robust_check=False):
+def is_fits_file(filepath, read_compressed=False, simple_check=False):
 	'''
 	Check if this is a FITS file from the extension (by default).
-	Set robust_check=True to actually read the start of the file.
+	Set simple_check=True to actually read the start of the file.
 	'''
 	is_fits = False
-	allowed_suffixes = [r'\.fits$', r'\.fts$']
+	allowed_suffixes = [r'\.fits$', r'\.fts$'] # will ignore case below
 	
 	if read_compressed:
-		allowed_suffixes = allowed_suffixes + [r'\.fits.gz$', r'\.fts.gz$', r'\.fits.bz2$', r'\.fts.bz2$']
+		allowed_suffixes = allowed_suffixes + [r'\.fits\.gz$', r'\.fts\.gz$', r'\.fits\.bz2$', r'\.fts\.bz2$']
 
 	is_fits = any([re.search(suffix, filepath, re.IGNORECASE) for suffix in allowed_suffixes])
 	
-	if is_fits and robust_check:
+	if is_fits and simple_check:
 		fits_start = "SIMPLE  =                    T" # start of every FITS file
 		
 		suffix = pathlib.Path(filepath).suffix.lower()[1:] # remove the leading '.'
@@ -52,7 +54,18 @@ def is_fits_file(filepath, read_compressed=False, robust_check=False):
 		
 	return is_fits
 
-def extract_FITS_header(filepath=None, HDU=None):
+def fitsmd_from_file(file=None):
+	'''
+	Create a FITS metadata structure from a FITS file (file or http).
+	'''
+	if file.startswith("http"):
+		metadata = FITSMetadataRemoteReader(url=file)
+		return metadata.jsonRepresentation
+	else:
+		metadata_dictionary = extract_FITS_header(file)
+		return json.dumps(metadata_dictionary)
+
+def extract_FITS_header(filepath=None):
 	'''
 	Function to extract the header from a FITS file to a JSON object.
 	
@@ -60,16 +73,12 @@ def extract_FITS_header(filepath=None, HDU=None):
 	read into the returned JSON object, including the byte offsets and file size.
 	
 	:filepath: The full path + filename to the FITS file
-	:HDU: The HDU number of the header to extract (default=all headers, 1=first header)
-	:returns: ductionary containing all headers plus metadata
+	:returns: dictionary containing all headers plus metadata
 	'''
 	
 	# validation
 	if filepath is None:
 		raise Exception("A filepath must be specified (none provided)")
-	
-	if HDU == 0:
-		raise Exception("An HDU value of '0' was given; note that HDU numbers start with 1.")
 	
 	# read the file
 	try:

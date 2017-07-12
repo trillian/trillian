@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
 '''
-This script takes a set of URLs to FITS files and reads the header from them,
+This code takes a set of URLs to FITS files and reads the header from them,
 using as little bandwidth as possible.
 
 Ref:
 http://stackoverflow.com/questions/2986392/what-is-the-best-way-to-open-a-url-and-get-up-to-x-bytes-in-python
 http://stackoverflow.com/questions/5787213/is-it-possible-to-read-only-first-n-bytes-from-the-http-server-using-linux-comma?lq=1
+
+Usage:
+
+    metadataJSON = fitsmd_from_file("http://localhost/cosmos-01-G141-big_19586.2D.fits")
 
 '''
 
@@ -17,11 +21,6 @@ import json
 from urllib.parse import urlparse
 import os.path
 import requests
-
-#file_url = "http://irsa.ipac.caltech.edu/ibe/data/wise/allsky/4band_p1bm_frm/3b/05693b/154/05693b154-w1-int-1b.fits"
-#file_url = "http://data.sdss3.org/sas/dr12/boss/photoObj/301/4203/photoField-004203-1.fits"
-#file_url = "http://localhost/frame-g-006073-4-0063.fits"
-file_url = "http://localhost/cosmos-01-G141-big_19586.2D.fits"
 
 class LastHDUReachedException(Exception):
 	pass
@@ -114,11 +113,11 @@ class HDUHeader(object):
 		else:
 			raise Exception("Attempting to read data byte end for HDU with no data.")
 	
-class FITSMetadata(object):
+class FITSMetadataRemoteReader(object):
 
 	def __init__(self, url=None):
 		if url is None:
-			raise Exception("A URL must be provided to create a FITSMetadata object.")
+			raise Exception("A URL must be provided to create a FITSMetadataRemoteReader object.")
 	
 		self.hdus = list() # index by HDU number-1, value = HDUHeader
 		self.fileLength = None
@@ -233,11 +232,16 @@ class FITSMetadata(object):
 			for i in range(36): # 36 cards in a block
 
 				card = block.data[i*80:i*80 + 80].decode('utf-8')
-				hdu.cards.append(card)
+				if card == 'END'+77*' ':
+					return # END reached
+				else:
+					hdu.cards.append(card.rstrip())
 
-				#NAXIS match
+				#NAXIS regexp match
 				naxis_rexp = re.match("(NAXIS[0-9]+)", card)
 				
+				# Extract information from certain fields
+				#
 				if card.startswith("BITPIX  ="):
 					header, value = card.split("=")
 					if "/" in value:
@@ -305,13 +309,15 @@ class FITSMetadata(object):
 		return next_block
 	
 	@property
-	def jsonRepresentation(self):
+	def metadata(self):
 		'''
+		Return the metadata as a dictionary.
 		'''
-		jsonDict = dict()
-		jsonDict["filepath"] = self.path
-		jsonDict["sha256"] = None
-		jsonDict["filename"] = self.filename
+		
+		metadata = dict()
+		metadata["filepath"] = self.path
+		metadata["sha256"] = None
+		metadata["filename"] = self.filename
 		
 		headers = list()
 		for hdu in self.hdus:
@@ -326,11 +332,14 @@ class FITSMetadata(object):
 			header["header"] = hdu.cards
 			headers.append(header)
 		
-		jsonDict["headers"] = headers
-		jsonDict["size"] = self.fileLength
+		metadata["headers"] = headers
+		metadata["size"] = self.fileLength
+	
+		return metadata
 		
-		return json.dumps(jsonDict)
-		
-md = FITSMetadata(url=file_url)
-print(md.jsonRepresentation)
-
+	@property
+	def jsonRepresentation(self):
+		'''
+		Return the metadata as a JSON object.
+		'''
+		return json.dumps(self.metadata)

@@ -196,7 +196,7 @@ if __name__ == "__main__":
 # 					queue.put((filepath, output_filepath))
 	
 	elif args.recursive:
-		for root, subdirs, files in os.walk(source_dir):
+		for root, subdirs, files in os.walk(top=source_dir, followlinks=True): # todo: make symlink command line param
 			# root: current path
 			# subdirs: list of directories in current path
 			# files: list of files in current path

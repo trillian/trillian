@@ -82,7 +82,7 @@ These source catalogs:
 
 * provide vetted and unique measurements of point and extended sources up to 1 arcminute diameter
 
-* exclude deuplicate observations
+* exclude duplicate observations
 
 * include a S/N cut that reduces the number of spurious sources
 

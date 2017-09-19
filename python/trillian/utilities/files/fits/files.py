@@ -30,10 +30,10 @@ def is_fits_file(filepath, read_compressed=False, simple_check=False):
 	Set simple_check=True to actually read the start of the file.
 	'''
 	is_fits = False
-	allowed_suffixes = [r'\.fits$', r'\.fts$'] # will ignore case below
+	allowed_suffixes = [r'\.fits$', r'\.fts$', r'\.fit$'] # will ignore case below
 	
 	if read_compressed:
-		allowed_suffixes = allowed_suffixes + [r'\.fits\.gz$', r'\.fts\.gz$', r'\.fits\.bz2$', r'\.fts\.bz2$']
+		allowed_suffixes = allowed_suffixes + [r'\.fits\.gz$', r'\.fts\.gz$', r'\.fit\.gz$', r'\.fits\.bz2$', r'\.fts\.bz2$', r'\.fit\.bz2$']
 
 	is_fits = any([re.search(suffix, filepath, re.IGNORECASE) for suffix in allowed_suffixes])
 	

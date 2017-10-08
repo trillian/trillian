@@ -37,7 +37,13 @@ Row count: 640
 
 This table lists files.
 
-Row count: 75,879,368
+Table has duplicate entries (e.g. all fields); cannot create a primary key on `artifactid`.
+
+| Row count        |            |
+| ---------------- | ---------- |
+| original table   | 75,879,368 |
+| duplicate count  | 26,697,002 |
+| unique row count | 49,182,366 |
 
 `artifactID` : primary key
 `planeID` : foreign key to CaomPlane
@@ -48,7 +54,9 @@ Row count: 75,879,368
 `producttype` : List of values: [AUXILIARY, CATALOG, THUMBNAIL, SCIENCE, CALIBRATION, PREVIEW, INFO]
 `alternative` : All values NULL.
 `producttypeid` : Foreign key to CaomProductDescription table (column `typeid`).
-`creationdate` , `recordcreated` , `recordmodified ` ,`statuscode` 
+`creationdate` , `recordcreated` , `recordmodified `
+
+`statuscode` : All values -1.
 
 ### CaomPart
 
@@ -60,7 +68,7 @@ Row count: 49,182,366
 `producttype` : List of values: [AUXILIARY, CATALOG, THUMBNAIL, SCIENCE, CALIBRATION, PREVIEW, INFO]
 `recordcreated ` , `recordmodified` ,`statuscode` 
 
-### CaomPlane
+#### CaomPlane
 
 Describes footprints on the sky. The field `posboundsstcs` contains the geometry. The possible formats:
 
@@ -146,4 +154,18 @@ POLYGON ICRS 129.20117354   7.95365949 129.22981692   7.97845031 129.25289069   
 `mtrmaglimit` : All rows NULL.
 `recordcreated` : Date record created.
 `recordmodified` : Date record modified.
+`statuscode` : All values -1.
+
+### CaomMembers
+
+Row count (original table): 1,662,927  
+Duplicate count: 4,544  
+Unique count: 1,658,383  
+
+
+
+`compositeid` : 56,506 unique values.
+`simpleid` : 137,3017 unique values.
+`recordcreated` : Date value. (58 unique values)
+`recordmodified` : Date value.(52 unique values)
 `statuscode` : All values -1.

@@ -16,6 +16,12 @@ Data was released in a series of “General Releases” (GR), as in GR2, GR3, et
 
 GALEX team: <http://www.galex.caltech.edu/about/team.html>
 
+## Data Access
+
+FTP: `ftp://archive.stsci.edu/pub/galex`
+
+HTTP: `http://archive.stsci.edu/pub/galex/`
+
 ## Surveys
 
 Link to details of each survey: [http://www.galex.caltech.edu/researcher/techdoc-ch2.html](http://www.galex.caltech.edu/researcher/techdoc-ch2.html)
@@ -96,7 +102,7 @@ Description of the GASC and GMSC catalogs: [https://archive.stsci.edu/prepds/gca
 
 Catalog search web interface: http://galex.stsci.edu/GR6/?page=mastform
 
-
+"GCAT" appears to refer to GASC, GMSC, and the Kepler GCAT.
 
 #### GALEX All-Sky Survey Source Catalog (GASC)
 
@@ -104,6 +110,16 @@ Catalog search web interface: http://galex.stsci.edu/GR6/?page=mastform
 * includes all GALEX observations with exposure times of ~100s, up to 800s
 * reaches a depth of NUV 20.5 mag (m$_{AB}$)
 * unique sources: ~40M
+* data only up to GR6
+* [documenation link](https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html)
+
+There are two kinds of files:
+
+`pricat`	: primary detections
+
+`seccat` : secondary detections, [note](https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html) these are:
+
+> a mixture of sources that do not make the NUV S/N=3 cut or are overlap/duplicate data in some way…They are a way to dig deeper, but they should be used with extreme caution. They are there primarily for completeness, as they are mostly just noise. Keep inmind that the GALEX pipeline dug down to S/N 2-2.5.
 
 Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/asc/](https://archive.stsci.edu/pub/hlsp/gcat/asc/)
 
@@ -113,12 +129,15 @@ Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/asc/](https://arc
 * covers 5,000 deg$^2$ with exposure times between 800-10,000 seconds.
 * reaches a depth of NUV 23.5 mag (m$_{AB}$)n 
 * unique sources: ~22M
+* data only up to GR6
 
 Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/msc/](https://archive.stsci.edu/pub/hlsp/gcat/msc/)
 
 #### Kepler GCAT
 
 A GALEX source catalog in the Kepler field, reprocessed using the same software and analysis steps. The differences are detailed on this web page: [https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html](https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html)
+
+Contains data up to GR7 but *only* covering the Kepler field.
 
 Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/kepler/](https://archive.stsci.edu/pub/hlsp/gcat/kepler/)
 
@@ -156,6 +175,7 @@ Data access is through the MAST archive. Files can be directly access via HTTP f
 * Top level:  <https://archive.stsci.edu/pub/hlsp/gcat/>
 * GASC: <https://archive.stsci.edu/pub/hlsp/gcat/asc/>
 * GMSC: <https://archive.stsci.edu/pub/hlsp/gcat/msc/>
+* MCAT: ??
 
 Web page describing the directory structure: <https://archive.stsci.edu/prepds/gcat/gcat_dataproducts.html>
 
@@ -175,9 +195,29 @@ MAST database schema: <http://galex.stsci.edu/GR6/?page=dbinfo>
 
 Database query: <http://galex.stsci.edu/GR6/?page=sqlform>
 
+# Trillian Notes
+
+### Import Commands
+
+#### GASC Catalog
+
+```bash
+fitsheader2csv ---header --trim-strings --delimiter pipe | psql --command "COPY galex.asc_pricat FROM stdin WITH (FORMAT 'csv', DELIMITER '|', HEADER, NULL '')" --username=trillian_admin --dbname=trilliadb
+```
 
 
-## Other Links
+
+# Other Links
 
 Getting started with GALEX data: http://www.galex.caltech.edu/wiki/Public:Documentation/Chapter_103
+
+
+
+---
+
+Data downloaded with:
+
+`wget -r --no-parent  ftp://archive.stsci.edu/pub/galex/GCAT/asc/fullsky/catalog`
+
+`wget -r --no-parent  ftp://archive.stsci.edu/pub/galex/GCAT/msc/fullsky/catalog`
 

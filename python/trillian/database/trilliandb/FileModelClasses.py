@@ -453,7 +453,7 @@ FitsFile.fileKinds = relationship(FileKind,
 								  secondary=FitsFileToFileKind.__table__,
 								  backref="fitsFiles")
 
-DirectoryPath.type = relationship(DirectoryPathType, backref="directories")
+DirectoryPath.pathType = relationship(DirectoryPathType, backref="directories")
 
 FitsHDU.headerValues = relationship(FitsHeaderValue,
 									order_by="asc(FitsHeaderValue.index)",

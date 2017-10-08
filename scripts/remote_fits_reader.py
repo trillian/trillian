@@ -21,7 +21,8 @@ import requests
 #file_url = "http://irsa.ipac.caltech.edu/ibe/data/wise/allsky/4band_p1bm_frm/3b/05693b/154/05693b154-w1-int-1b.fits"
 #file_url = "http://data.sdss3.org/sas/dr12/boss/photoObj/301/4203/photoField-004203-1.fits"
 #file_url = "http://localhost/frame-g-006073-4-0063.fits"
-file_url = "http://localhost/cosmos-01-G141-big_19586.2D.fits"
+#file_url = "http://localhost/cosmos-01-G141-big_19586.2D.fits"
+file_url = "http://galex.stsci.edu/data/GR6/pipe/02-vsn/50085-AIS_85/d/00-visits/0001-img/07-try/AIS_85_0001_sg93-nd-int.fits.gz"
 
 class LastHDUReachedException(Exception):
 	pass

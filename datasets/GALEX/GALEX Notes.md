@@ -113,6 +113,8 @@ Catalog search web interface: http://galex.stsci.edu/GR6/?page=mastform
 * data only up to GR6
 * [documenation link](https://archive.stsci.edu/prepds/gcat/gcat_gasc_gmsc.html)
 
+Number of rows: 39,570,031
+
 There are two kinds of files:
 
 `pricat`	: primary detections
@@ -141,14 +143,24 @@ Contains data up to GR7 but *only* covering the Kepler field.
 
 Direct link to files: [https://archive.stsci.edu/pub/hlsp/gcat/kepler/](https://archive.stsci.edu/pub/hlsp/gcat/kepler/)
 
+#### Links To Column Descriptions
+
+*To be better organized*
+
+<http://www.galex.caltech.edu/wiki/GCAT_Manual>
+<http://www.galex.caltech.edu/wiki/Public:Documentation/Chapter_103>
+<http://www.galex.caltech.edu/DATA/gr1_docs/GR1_Pipeline_and_advanced_data_description_v2.htm>
+<http://www.galex.caltech.edu/DATA/gr1_docs/GR1_basic_data_description_v4.htm>
+<http://www.galex.caltech.edu/DATA/gr1_docs/GR1_Pipeline_and_advanced_data_description_v2.htm>
+<http://www.galex.caltech.edu/researcher/files/mcat_columns_long.txt>
+<http://www.galex.caltech.edu/wiki/Public:Documentation/Chapter_103>
+
 ## Data Access
 
 #### Imaging Data
 
 Root location: <http://galex.stsci.edu/data/>
-
 GR6: <http://galex.stsci.edu/data/GR6/>
-
 GR7: <http://galex.stsci.edu/data/GR7/>
 
 Pipeline data guide: <http://asd.gsfc.nasa.gov/archive/galex/Documents/ERO_data_description_3.htm>
@@ -201,8 +213,20 @@ Database query: <http://galex.stsci.edu/GR6/?page=sqlform>
 
 #### GASC Catalog
 
+One file
+
 ```bash
-fitsheader2csv ---header --trim-strings --delimiter pipe | psql --command "COPY galex.asc_pricat FROM stdin WITH (FORMAT 'csv', DELIMITER '|', HEADER, NULL '')" --username=trillian_admin --dbname=trilliadb
+fitstable2csv.py --file SP_000-007-asc-xd-pricat.fits --header --trim-strings --delimiter pipe | psql --command "COPY dataset_galex.asc_pricat FROM stdin WITH (FORMAT 'csv', DELIMITER '|', HEADER, NULL '')" --username=trillian_admin --dbname=trilliandb
+```
+
+All files:
+
+```bash
+for i in `ls *pricat*`
+do
+echo "Importing $i..."
+fitstable2csv.py --file $i --header --trim-strings --delimiter pipe | psql --command "COPY dataset_galex.asc_pricat FROM stdin WITH (FORMAT 'csv', DELIMITER '|', HEADER, NULL '')" --username=trillian_admin --dbname=trilliandb
+done
 ```
 
 

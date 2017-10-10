@@ -1,5 +1,5 @@
-CREATE TABLE ﻿dataset_galex.asc_pricat (
-    ggoid TEXT,
+CREATE TABLE dataset_galex.asc_pricat (
+    ggoid BIGINT,
     tilenum BIGINT,
     ra numeric,
     dec numeric,
@@ -114,11 +114,11 @@ CREATE TABLE ﻿dataset_galex.asc_pricat (
     bkgrnd_mag_nuv NUMERIC,
     bkgrnd_mag_fuv NUMERIC,
     hp_pixel TEXT,
-    extended SMALLINT,
+    extended BOOLEAN,
     flux_3ul_fuv NUMERIC,
     mag_3ul_fuv NUMERIC,
     flux_d6p0_3ul_fuv NUMERIC,
     mag_d6p0_3ul_fuv NUMERIC,
-    manflag INTEGER
+    manflag SMALLINT
 )
 WITH (OIDS=FALSE);

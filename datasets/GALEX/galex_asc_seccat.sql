@@ -1,5 +1,5 @@
 CREATE TABLE dataset_galex.asc_seccat (
-    ggoid TEXT,
+    ggoid BIGINT,
     tilenum BIGINT,
     ra numeric,
     dec numeric,
@@ -114,11 +114,10 @@ CREATE TABLE dataset_galex.asc_seccat (
     bkgrnd_mag_nuv NUMERIC,
     bkgrnd_mag_fuv NUMERIC,
     hp_pixel TEXT,
-    extended SMALLINT,
+    extended BOOLEAN,
     flux_3ul_fuv NUMERIC,
     mag_3ul_fuv NUMERIC,
     flux_d6p0_3ul_fuv NUMERIC,
-    mag_d6p0_3ul_fuv NUMERIC,
-    manflag INTEGER
+    mag_d6p0_3ul_fuv NUMERIC
 )
 WITH (OIDS=FALSE);

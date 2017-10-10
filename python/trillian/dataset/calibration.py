@@ -25,22 +25,17 @@ class Calibration(object):
 	def bandpass(self):
 		pass
 		
-class Bandpass(object):
+class Bandpass(metaclass=ABCMeta):
+    
 	def __init__(self):
 		'''
 		
 		:param wavelengths - Numpy array
 		:param transmission - Numpy array
 		'''
-		self.wavelengths = None
-		self._transmission = None # Numpy array
-	
-	def transmission(self):
-		if _transmission is None:
-			# read wavelengths, transmission from somewhere
-		else:
-			self._transmission	
-	
+		self.wavelengths = None  # Numpy array
+		self.transmission = None # Numpy array
+
 	def magnitude(self, spectrum=None):
 		'''
 		

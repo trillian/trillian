@@ -2,17 +2,19 @@
 
 GALEX (Galaxy Evolution Explorer) is a NASA satellite that operated from 2003-? that performed an all-sky survey in the far- and near-ultraviolet.
 
-| Range   | Wavelengths |
-| ------- | ----------- |
-| Far-UV  | 1400-1800 Å |
-| Near-UV | 1800-2800 Å |
+| Range   | Wavelengths | Resolution (FWHM) |
+| ------- | ----------- | ----------------- |
+| Far-UV  | 1350-1750 Å | 4.3 arcsec        |
+| Near-UV | 1750-2800 Å | 5.3 arcsec        |
 
 Survey Modes:
 
-* direct imaging - all-sky survey covered 2/3 of the sky
+* direct imaging - "All-sky Imaging" (name of survey), covered 2/3 of the sky
 * spectroscopic (grism)
 
-Data was released in a series of “General Releases” (GR), as in GR2, GR3, etc. GR6/GR7 are the combined final release that supercede all previous releases. The release is "joint" as GR7 is a reprocessing of some of the data, but not all of GR6. [TODO: determine the exact delination here.]
+Data was released in a series of “General Releases” (GR), as in GR2, GR3, etc. GR6/GR7 are the combined final release that supercede all previous releases. The release is "joint" as GR7 is a reprocessing of some of the data, but not all of GR6. [TODO: determine the exact delineation here.]
+
+1” astrometry.
 
 GALEX team: <http://www.galex.caltech.edu/about/team.html>
 

@@ -11,7 +11,8 @@ class Calibration(object):
     __metaclass__ = ABCMeta
 
 #	def __init__(self):
-#		pass
+#		self.dataset = dataset
+#		self.release = release
 				
 	@abstractproperty
 	def psf(self):
@@ -33,6 +34,8 @@ class Bandpass(metaclass=ABCMeta):
 		:param wavelengths - Numpy array
 		:param transmission - Numpy array
 		'''
+		self.name = None
+		self.zero_point = None
 		self.wavelengths = None  # Numpy array
 		self.transmission = None # Numpy array
 

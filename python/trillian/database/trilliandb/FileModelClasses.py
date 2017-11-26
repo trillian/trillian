@@ -298,19 +298,19 @@ class DirectoryPath(Base):
 			if add:
 				# create it here
 				# use a new session (factory) in case another running process might be doing the same
-				TempSession = scoped_session(sessionmaker(bind=dbc.engine, autocommit=True))
+				TempSession = scoped_session(sessionmaker(bind=dbc.engine, autoflush=False, autocommit=True))
 				tempSession = TempSession()
 				
-				logging.debug("DirectoryPath: About to begin() on tempSession.")
+				#logging.debug("DirectoryPath: About to begin() on tempSession.")
 				tempSession.begin()
 				theDirectoryPath = DirectoryPath()
 				theDirectoryPath.path = path
-				theDirectoryPath.type = tempSession.query(DirectoryPathType).filter(DirectoryPathType.label==type_string).one()
+				theDirectoryPath.pathType = tempSession.query(DirectoryPathType).filter(DirectoryPathType.label==type_string).one()
 				tempSession.add(theDirectoryPath)
 				
 				try:
 					tempSession.commit()
-				except sqlalchemy.exc.IntegrityError:
+				except sqlalchemy.exc.IntegrityError as err:
 					# since this session is in a "bubble", another process elsewhere
 					# (e.g. in a multiprocessing environment) could have beat us to it.
 					#
@@ -318,10 +318,13 @@ class DirectoryPath(Base):
 					# sqlalchemy.exc.IntegrityError: (psycopg2.IntegrityError) duplicate key value violates unique constraint "directory_path_path_uniq"
 					#
 					# since we know the value is there, the next query should succeed - wait a bit in case the other thread needs time
+					logging.debug("looking up path='{0}', type_string='{1}'".format(path, type_string))
+					logging.debug("sqlalchemy.exc.IntegrityError; sleeping for 1s and trying again: {0}".format(err))
 					time.sleep(1)
 				
 				TempSession.remove() # close and release scoped_session
 				
+				#print("Add new: path='{0}' kind='{1}'".format(path, type_string))
 				# now pull it out into the given session
 				theDirectoryPath = session.query(DirectoryPath)\
 										  .join(DirectoryPathType)\

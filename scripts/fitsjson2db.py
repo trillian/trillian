@@ -5,7 +5,7 @@ This script read FITS headers (and other file metadata) that have been extracted
 from FITS files and loads them into the Trillian database.
 
 The script fits2header.py extracts headers from FITS files into JSON
-with the extension ".thdr" or, if compressed, ".thdr.gz". This script looks
+with the extension ".fitsmd" or, if compressed, ".fitsmd.gz". This script looks
 for those extensions. 
 """
 
@@ -47,8 +47,8 @@ def getBasePathObject(session=None, base_path=None):
 	# ---------------------------------------------------
 	#
 	# remove any trailing "/" to standardize on base paths
-	if base_path is None:
-		return None
+	#if base_path is None:
+	#	return None
 	if base_path[-1:] == "/":
 		base_path = base_path[0:-1]
 	basePath = DirectoryPath.basePathFromString(session=session, path=base_path, add=False)
@@ -76,13 +76,13 @@ def process_files(file_list):
 	'''
 	from trillian.database.connections import LocalhostConnection as db
 	from trillian.database.trilliandb.TrillianModelClasses import DatasetRelease
-	from trillian.database.trilliandb.FileModelClasses import DirectoryPath, DirectoryPathType, FitsFile
+	from trillian.database.trilliandb.FileModelClasses import DirectoryPath, DirectoryPathType, FitsFile, FitsFileToDirectoryPath
 
 	session = db.Session()
 	#logging.debug("process_files: about to begin() new session")
 	if session.is_active:
 		logging.debug("Session is_active=True immediately begin session.begin().")
-	session.begin() # one session per directory / process
+	#session.begin() # one session per directory / process
 	
 	datasetRelease = DatasetRelease.objectFromString(session=session, short_name=args.source)
 	if args.base_path:
@@ -98,33 +98,42 @@ def process_files(file_list):
 	path_types_cache["base"] = basePathType
 	
 	for filepath in file_list:
+		logging.debug("Processing file: {0} ...".format(filepath))
 		filename = os.path.basename(filepath)
-		if filename[-8:] == ".thdr.gz":
+		if filename.endswith(".fitsmd.gz"):
 			with gzip.open(filepath, mode="rt") as f:
 				json_data = f.read()
-		elif filename[-5] == ".thdr":
+		elif filename.endswith(".fitsmd"):
 			with open(filepath, encoding="utf-8") as f:
 				json_data = f.read()
 		else:
+			logging.debug("Skipping: {0} ...".format(filepath))
 			continue
-
+	
 		# convert JSON data
 		fits_dict = json.loads(json_data)
 		
+		relative_path_string = os.path.relpath(path=fits_dict["filepath"], start=args.base_path)
+		
 		# check if we have this file already
+		# a file is unique for a given [data release, filename, relative path]
+		#
 		try:
 			f = session.query(FitsFile)\
-					   .join(DatasetRelease)\
+					   .join(DatasetRelease, FitsFileToDirectoryPath, DirectoryPath, DirectoryPathType)\
 					   .filter(FitsFile.filename==fits_dict["filename"])\
 					   .filter(FitsFile.datasetRelease==datasetRelease)\
+					   .filter(DirectoryPath.path==relative_path_string)\
+					   .filter(DirectoryPath.pathType==relativePathType)\
 					   .one()
+			logging.debug("   ('{0}' already in database)".format(fits_dict["filename"]))
 		except sqlalchemy.orm.exc.NoResultFound:
 			addFileRecordToDatabase(session=session,
 									fits_dict=fits_dict,
 									basePath=basePath,
 									dataset_release=datasetRelease)
+			logging.debug("   importing '{0}'...".format(fits_dict["filename"]))
 
-	#print("Finished with: {0}".format(file_list[-1]))
 	session.commit()
 	db.engine.dispose() # close all database connections
 
@@ -186,10 +195,10 @@ def addFileRecordToDatabase(session=None, fits_dict=None, basePath=None, dataset
 		#
 		newHDU = FitsHDU()
 		session.add(newHDU)
-		newHDU.number = int(hdu_dict["hdu"])
-		newHDU.header_start_offset = hdu_dict["header_start"]
+		newHDU.number = int(hdu_dict["hdu_number"])
+		newHDU.header_start_offset = hdu_dict["hdu_start"]
 		newHDU.data_start_offset = hdu_dict["data_start"]
-		newHDU.data_end_offset = hdu_dict["data_end"]
+		newHDU.data_end_offset = hdu_dict["hdu_end"]
 		newHDU.fitsFile = newFile
 
 		for index, header_line in enumerate(hdu_dict["header"]):
@@ -315,19 +324,20 @@ if __name__ == "__main__":
 						default=False,
 						required=False)
 	parser.add_argument("--log-level",
-						help="set logging mode (debug, info, warning, error, critical)",
+						help="set logging mode (debug, info, warning, error, critical), default='warning'",
 						choices=["debug", "info", "warning", "error", "critical"],
 						default=None,
 						required=False)
 
 	# Print help if no arguments are provided
 	if len(sys.argv) < 2:
+		print()
 		parser.print_help()
+		print()
 		parser.exit(1)
 
 	args = parser.parse_args()
-
-	logging.basicConfig(level=logging.CRITICAL)
+	
 	if args.log_level is None:
 		logging.propagate = False
 	elif args.log_level == "debug":
@@ -338,7 +348,11 @@ if __name__ == "__main__":
 		logging.basicConfig(level=logging.WARNING)
 	elif args.log_level == "error":
 		logging.basicConfig(level=logging.ERROR)
-
+	elif args.log_level == "critical":
+		logging.basicConfig(level=logging.CRITICAL)
+	
+	logger = logging.getLogger(__name__)
+	
 	# check that base path exists in database
 # 	session = db.Session()
 # 	try:
@@ -352,8 +366,8 @@ if __name__ == "__main__":
 # 	db.engine.dispose()
 	
 	if args.recursive:
-
-		pool = multiprocessing.Pool(processes=35, initializer=initialize_process) # initargs=(queue,)
+		logger.debug("Recursive search")
+		pool = multiprocessing.Pool(processes=8, initializer=initialize_process) # initargs=(queue,)
 		
 		for dir in args.source_directory:
 			for root, subdirs, files in os.walk(dir):
@@ -371,7 +385,7 @@ if __name__ == "__main__":
 					# read file containing JSON data
 					filepaths.append(os.path.join(root, filename))
 				
-				logging.info("Adding to pool: {0}".format(root))
+				logger.info("Adding to pool: {0}".format(root))
 				if len(filepaths) > 0:
 					#pool.apply_async(func=process_files, args=(filepaths,), error_callback=error_callback)
 					
@@ -382,7 +396,8 @@ if __name__ == "__main__":
 		pool.join()  # wait for all tasks to finish
 		
 	else:
-		pool = multiprocessing.Pool(processes=35, initializer=initialize_process)
+		logger.debug("Non-recursive search")
+		pool = multiprocessing.Pool(processes=8, initializer=initialize_process)
 
 		for dir in args.source_directory:
 			# only select files; recursive more not selected
@@ -394,5 +409,4 @@ if __name__ == "__main__":
 		pool.close() # indicate that no more work will be added
 		pool.join()  # wait for all processes to complete
 
-#db.engine.dispose()
 sys.exit(0)

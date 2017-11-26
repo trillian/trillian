@@ -44,7 +44,7 @@ except:
 
 engine = db.engine
 metadata = db.metadata
-Session = scoped_session(sessionmaker(bind=engine, autocommit=True))
+Session = scoped_session(sessionmaker(bind=engine, autocommit=False))
 
 
 

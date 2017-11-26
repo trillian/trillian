@@ -19,8 +19,8 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.dialects.postgresql import array as pg_array
 
-import trillian.database.connections import RemoteTunnelConnection as db
-#from trillian.database.connections import LocalhostConnection import db
+#from trillian.database.connections import RemoteTunnelConnection as db
+from trillian.database.connections import LocalhostConnection import db
 from trillian.database.photodb.ModelClasses import Run
 import sdss.database.NumpyAdaptors
 

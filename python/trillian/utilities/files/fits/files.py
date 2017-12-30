@@ -9,6 +9,7 @@ Created 2 May 2016
 
 import re
 import os
+import sys
 import bz2
 import json
 import gzip
@@ -57,6 +58,10 @@ def is_fits_file(filepath, read_compressed=False, simple_check=False):
 def fitsmd_from_file(file=None):
 	'''
 	Create a FITS metadata structure from a FITS file (file or http).
+	
+	Parameters
+	----------
+	:file:
 	'''
 	if file.startswith("http"):
 		metadata = FITSMetadataRemoteReader(url=file)
@@ -65,7 +70,7 @@ def fitsmd_from_file(file=None):
 		metadata_dictionary = extract_FITS_header(file)
 		return json.dumps(metadata_dictionary)
 
-def extract_FITS_header(filepath=None, missing_values=False):
+def extract_FITS_header(filepath=None):
 	'''
 	Function to extract the header from a FITS file to a JSON object.
 	
@@ -74,8 +79,8 @@ def extract_FITS_header(filepath=None, missing_values=False):
 	
 	Parameters
 	----------
-	:filepath: The full path + filename to the FITS file
-	:missing_values: Set to true when headers contain missing values (FITSIO status = 204: keyword value is undefined)
+	:filepath: the full path + filename to the FITS file
+	:missing_values: Set to True when headers contain missing values (FITSIO status = 204: keyword value is undefined).
 	:returns: dictionary containing all headers plus metadata
 	'''
 	
@@ -99,16 +104,57 @@ def extract_FITS_header(filepath=None, missing_values=False):
 
 		# read header
 		# -----------
-		if missing_values:
-			header = hdu.read_header_list() # -> list of dictionaries, keys: "card_string", "name", "value", "comment"
-		else:
+		axes = list()
+		try:
 			header = hdu.read_header() # -> fitsio.FITSHDR
-#		cards = list()
-#		for record in header.records():
-#			cards.append(record["card_string"]) # only read the "raw" header line
-		cards = [rec["card_string"] for rec in header]
-		header_data["header"] = cards
+			cards = [rec["card_string"] for rec in header.records()]
+			
+			# used for data length below
+			pcount = header.get('PCOUNT', 0) # default values that do not affect data length
+			gcount = header.get('GCOUNT', 1)
+			
+			naxis = header.get('NAXIS')
+			if naxis > 0:
+				bitpix = header['BITPIX']
+				
+				for i in range(naxis):
+					axes.append(header['NAXIS'+str(i+1)])
+
+		except OSError as e:
+			if "status = 204" in str(e):
+				# "FITSIO status = 204: keyword value is undefined"
+				#
+				# This happens when a keyword has no value (this is in valid).
+				# Handle this by using hdu.read_header_list() which doesn't attempt
+				# to parse the values. Must parse keywords more manually.
+				#
+				header = hdu.read_header_list() # -> list of dictionaries, keys: "card_string", "name", "value", "comment"
+				cards = [rec["card_string"] for rec in header]
+
+				# get PCOUNT, GCOUNT, used for data length below
+				pcount = 0 # defaults
+				gcount = 1
+				axes = list()
+				for rec in header:
+					if rec['name'] == "BITPIX":
+						bitpix = int(rec['value'])
+					elif rec['name'] == "PCOUNT":
+						try:
+							pcount = rec['value']
+						except ValueError:
+							pass
+					elif rec['name'] == "GCOUNT":
+						try:
+							gcount = rec['value']
+						except ValueError:
+							pass
+					elif rec['name'] == 'NAXIS':
+						naxis = int(rec['value'])
+					elif rec['name'].startswith('NAXIS'):
+						axes.append(int(rec['value']))
+					
 		
+		header_data["header"] = cards
 		header_data["hdu_number"] = i+1
 		
 		# read byte offsets
@@ -124,13 +170,10 @@ def extract_FITS_header(filepath=None, missing_values=False):
 		
 		# calculate data length
 		# ---------------------
-		pcount = header.get('PCOUNT', 0) # default values that do not affect data length
-		gcount = header.get('GCOUNT', 1)
-		
-		naxis = header['NAXIS']
-		axes = list()
-		for i in range(naxis):
-			axes.append(header['NAXIS'+str(i+1)])
+		#naxis = header['NAXIS']
+#		axes = list()
+#		for i in range(naxis):
+#			axes.append(header['NAXIS'+str(i+1)])
 		if len(axes) == 0:
 			data_length = 0
 		else:
@@ -138,7 +181,7 @@ def extract_FITS_header(filepath=None, missing_values=False):
 			for axis in axes[1:]:
 				naxes_product = axis * naxes_product
 			naxes_product = naxes_product + pcount
-			bitpix = header['BITPIX']
+			#bitpix = header['BITPIX']
 			data_length = naxes_product * bitpix2byteSize[bitpix] * gcount
 		
 		header_data["data_length"] = data_length

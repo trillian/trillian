@@ -37,6 +37,7 @@ from trillian.utilities.files.fits import fitsmd_from_file, is_fits_file
 # 	return any([re.search(suffix, filename, re.IGNORECASE) for suffix in allowed_suffixes])
 	
 def worker_main(queue):
+
 	done = False
 	while True and not done:
 		# TODO: Handle a "done" signal placed on queue

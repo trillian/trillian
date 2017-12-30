@@ -65,14 +65,17 @@ def fitsmd_from_file(file=None):
 		metadata_dictionary = extract_FITS_header(file)
 		return json.dumps(metadata_dictionary)
 
-def extract_FITS_header(filepath=None):
+def extract_FITS_header(filepath=None, missing_values=False):
 	'''
 	Function to extract the header from a FITS file to a JSON object.
 	
 	In addition to the complete contents of the header, file metadata is also
 	read into the returned JSON object, including the byte offsets and file size.
 	
+	Parameters
+	----------
 	:filepath: The full path + filename to the FITS file
+	:missing_values: Set to true when headers contain missing values (FITSIO status = 204: keyword value is undefined)
 	:returns: dictionary containing all headers plus metadata
 	'''
 	
@@ -96,10 +99,14 @@ def extract_FITS_header(filepath=None):
 
 		# read header
 		# -----------
-		header = hdu.read_header() # -> fitsio.FITSHDR
-		cards = list()
-		for record in header.records():
-			cards.append(record["card_string"]) # only read the "raw" header line
+		if missing_values:
+			header = hdu.read_header_list() # -> list of dictionaries, keys: "card_string", "name", "value", "comment"
+		else:
+			header = hdu.read_header() # -> fitsio.FITSHDR
+#		cards = list()
+#		for record in header.records():
+#			cards.append(record["card_string"]) # only read the "raw" header line
+		cards = [rec["card_string"] for rec in header]
 		header_data["header"] = cards
 		
 		header_data["hdu_number"] = i+1

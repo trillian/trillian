@@ -177,23 +177,22 @@ if __name__ == "__main__":
 				output_filepath = os.path.join(output_dir, filename.rstrip(".gz")+".fitsmd")
 			queue.put((resource, output_filepath))
 
-# 	if args.input_file:
-# 		# Read from the files listed in given file.
-# 		# If the path starts with a "/", read it as a full path,
-# 		# otherwise assume the paths are relative to the directory specified in the "-d" argument.
-# 		
-# 		with open(args.input_file) as input_file:
-# 			for nextpath in input_file:
-# 				if nextpath[0] == '/':
-# 					filepath = nextpath
-# 					output_filepath = os.join.path(output_dir, 
-# 
-# 				else:
-# 					filepath = os.path.join(source_dir, nextpath)
-# 				
-# 				
-# 				if os.path.isfile(output_filepath) == False:
-# 					queue.put((filepath, output_filepath))
+	elif args.input_file:
+		# Read from the files listed in given file.
+		# If the path starts with a "/", read it as a full path,
+		# otherwise assume the paths are relative to the directory specified in the "-d" argument.
+
+		with open(args.input_file) as input_file:
+			for nextpath in input_file:
+				trimmed_path=nextpath
+				trimmed_path=trimmed_path.strip()
+				if trimmed_path[0] == '/':
+					filepath = trimmed_path
+					output_filepath = os.path.join(output_dir, filepath.rstrip(".gz")+".fitsmd")
+				else:
+					filepath = os.path.join(source_dir, trimmed_path)
+					output_filepath = os.path.join(output_dir, filepath.rstrip(".gz")+".fitsmd")
+				queue.put((filepath, output_filepath))
 	
 	elif args.recursive:
 		for root, subdirs, files in os.walk(top=source_dir, followlinks=True): # todo: make symlink command line param

@@ -2,7 +2,7 @@ Trillian
 ========
 #### An All-Sky, Multi-wavelength Astronomy Computational Engine
 
-Trillian is a project whose aim is to bridge the gap between astrophysical models and the vast amount of publicly available astronomical data. 
+Trillian is an amitious project created and developed by Demitri Muna whose aim is to bridge the gap between astrophysical models and the vast amount of publicly available astronomical data. One of its primary aims is to make the analysis of large volumes of multi-wavelength data as easy as analyzing a single image. It's almost there.
 
 Its principle features include:
 
@@ -12,7 +12,24 @@ Its principle features include:
 
 A more detailed descripton of the project can be found here: [http://trillianverse.org](http://trillianverse.org).
 
-An arXiv paper by Demitri Muna and Eric Huff that describes Trillian in more detail can be found here: [arXiv:1402.5932](http://arxiv.org/abs/1402.5932), and more details are available on the wiki (above).
+A paper written by Demitri Muna and Eric Huff that describes Trillian in more detail can be found here:  [arXiv:1402.5932](http://arxiv.org/abs/1402.5932).
+
+#### Current Support
+
+Trillian's current development is partially supported by a NASA Astrophysics Data Analysis Program (ADAP) grant. Ongoing hardware support is greatfully acknowledged from the Center for Cosmology and Astroparticle Physics at Ohio State University.
+
+
+
+## Where Is The Code?
+
+Trillian has been developed over the past several years and is currently under active development. It is now at an advanced stage of functionality. As a project comprised of many moving parts, it currently consists of:
+
+* a 20+ TB database of metadata, mapping 500+TB of data from a wide range of astronomical data products
+* a queing system capable of storing and feeding hundreds of millions units of "work"
+* a Python API that provides atomic, random access to the data indexed
+* a container-based framework for distributed computation
+
+As the functionality of this project spans these many parts (and more), it is inaccurate to assess the current state of the project from one or a few GitHub repositories. Unfortunately this has happened more than once, so for the time being the code is being removed. I have the full intention to make all of the code open and avaliable (as it should be) at a later date when it is ready to be demonstrated. People are welcome to view code and notes from earlier revisions of this repository, but note that is it is now years out of date and by no means a current reflection of the project.
 
 
 
@@ -46,31 +63,19 @@ This is the only model of data analysis that can currently enable individuals wi
 
 
 
+## Mozilla ScienceLab
+
+The [Trillian project](https://science.mozilla.org/projects/trillian) was selected as one of the earliest open source projects of Mozilla Science Lab’s [Collaborate on Software for Science](http://collaborate.mozillascience.org). The recognition of our project and its aims was flattering and very appreciated. The process and inclusion was very instructuve for myself (and, I hope, the Science Lab as well). It provided a great platform to bring people from the general community into a project like this. There were several "lessons learned" for me. First, it's probably best for a project to be at a certain stage of development before people not familiar with the domain (here, handling astrophysical data) can be brought in. A project like this starts with basic architecture — think the foundation of a house. Building this requires deep knowledge of not only the specific problems to be solved but of the eventual usage, each of which require domain knowledge. From my experience and observation, this stage of development is often done by a very small number of people with a shared vision. Once the foundation is laid, it's possible to divide work into small enough units that people without the specific domain knowledge can "swoop in" to help. Another lesson learned is that with open source projects, volunteers can have wildy varying skill sets or backgrounds. Integrating these into a project is possible, but also requires time and attention. This is understandable, but the very nature of volunteered effort means that help can diappear as quickly as it can appear. This is not to challenge the effectiveness of the model, but note only that it is a challenge.
+
+All said, I got a lot out of being a participant of the Mozilla Science Lab and would be happy to continue to support and participate.
+
+
+
 ## Resources
 
 The Trillian project is being developed at the [Center for Cosmology and Astroparticle Physics](http://ccapp.osu.edu) (CCAPP) at Ohio State University. CCAPP awarded the project a $10K startup fund which was used to purchase a ~30TB server to develop a proof of concept. While certainly not enough for all-sky coverage while trying to include even the most popular data sets, it’s more than enough for a both a proof of concept and scientific inquiry. Two regions on the sky have been chosen initially: SDSS’s Stripe 82 and the Kepler field, selected as they have been heavily studied and are good representative regions for both extragalactic and Galactic science. Data covering as many wavelengths as possible will be collected for these areas.
 
 
-
-## Current Development Goals
-
-The first milestone is to provide an arbitrarily simple model to Trillian, have the framework apply that model to all objects available, and return a likelihood value for each one. Current tasks include:
-
-- Gather and index the metadata from as many astronomical data sets as possible (50TB indexed and counting!).
-- Initialize the server with the coarsest resolution of HEALPix regions/trixels.
-- Define the structure of each trixel (the storage on disk representation of each HEALPix region). This will include a schema for each data set (e.g. SDSS, WISE, etc.) in a shared database on each node, indexing of image data, etc.
-- Define an API for accessing data between nodes.
-- Implement a Docker VM that can accept a user-supplied Python program to be run on nodes.
-- Define the API for the user-supplied Python code. This code will accept data in a defined format (limited on the first pass to magnitudes, spectra, and raw pixel data), and return a likelihood value that the provided data fits the model represented by the code.
-- Define a job queue system (built on Redis?) for communication between the central server and the nodes.
-
-## Support
-
-*  Trillian is gratefully supported by the [Center for Cosmology and Astroparticle Physics (CCAPP)](http://ccapp.osu.edu) at Ohio State University.
-
-*  The [Trillian project](https://science.mozilla.org/projects/trillian) was selected for Mozilla Science Lab’s [Collaborate on Software for Science](http://collaborate.mozillascience.org).
-
-   ​
 
 ## Contact
 

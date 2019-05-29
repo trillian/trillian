@@ -1,2 +1,0 @@
-## Directions to populate database
-

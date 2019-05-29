@@ -1,2 +1,0 @@
-
-from .twomass import TwoMASS

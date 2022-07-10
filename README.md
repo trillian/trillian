@@ -31,10 +31,10 @@ Soon! Trillian is under active development. It is currently being used by the au
 
 The project is comprised of several components written by Demitri Muna:
 
-* [Cornish](https://github.com/demitri/cornish): A Python interface over the Starlink AST astronomical software library (part of the [Starlink Software Collection](https://starlink.eao.hawaii.edu/starlink/WelcomePage)). This library performs region handling on the sky.
+* [Cornish](https://github.com/demitri/cornish): A Python interface over the [Starlink AST](https://starlink.eao.hawaii.edu/starlink/AST) astronomical software library (part of the [Starlink Software Collection](https://starlink.eao.hawaii.edu/starlink/WelcomePage)). This library performs region handling on the sky.
 * [Scientific Data Descriptors(SciDD)](https://github.com/scidd/scidd-core): A schema and Python library that provides a location-independent interface to data by defining unique descriptors that point to specific resources.
 * [QLSC: Quadrilateralized Spherical Cube for Python](https://github.com/demitri/qlsc): A geospatial indexing scheme for segmenting a sphere into pixels with the aim of optimized spatial indexing and queries.
-* [pgAST](https://github.com/demitri/pgast): A PostgreSQL plug-in that implements some functionality from the [Starlink AST](https://starlink.eao.hawaii.edu/starlink/AST), a library for handling world coordinate systems (WCS) in astronomy, providing an interface between WCS and region-related functionality for databases containing astronomical data.
+* [pgAST](https://github.com/demitri/pgast): A PostgreSQL plug-in that implements some functionality from [Starlink AST](https://starlink.eao.hawaii.edu/starlink/AST), a library for handling world coordinate systems (WCS) in astronomy, providing an interface between WCS and region-related functionality for databases containing astronomical data.
 
 All of these components can be accessed via the links above.
 
